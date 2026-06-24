@@ -51,6 +51,12 @@
   .bar.enemy > div { background: linear-gradient(90deg, #6a2f6a, #b04ab0); }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 14px; }
   .stats span { color: var(--accent); }
+  .stats small { color: var(--muted); font-size: 12px; }
+  .vitals { display: flex; flex-wrap: wrap; gap: 14px; font-size: 19px; margin-top: 4px; }
+  .vital { white-space: nowrap; }
+  .vital.hp { color: #ff7b76; }
+  .vital.mana { color: #79a8ff; }
+  .vital.oro { color: var(--accent); }
   #log { background: #0a0810; border: 1px solid #2a2438; border-radius: 8px; padding: 12px;
     height: 170px; overflow-y: auto; font-size: 14px; line-height: 1.5; margin-bottom: 12px; }
   #log p { margin: 3px 0; }
@@ -154,6 +160,7 @@ const ITEMS = {
   maglia:      item("Cotta di Maglia", "armatura", { bonus: 4, valore: 40 }),
   mantello:    item("Mantello Arcano", "armatura", { bonus: 5, valore: 65 }),
   amuleto:     item("Amuleto Perduto", "tesoro", { valore: 0 }),
+  chiave:      item("Chiave del Drago", "tesoro", { valore: 0 }),
 };
 const CLASSI = {
   Guerriero: { pv: 30, attacco: 8, difesa: 5, mana: 8, abilita: "Colpo Poderoso",
@@ -221,7 +228,7 @@ const MONDO = {
 };
 
 const QUESTS = {
-  principale:  { nome: "L'Ombra del Drago", obiettivo: "Sconfiggi il Drago Antico nell'Antro, a nord della cripta." },
+  principale:  { nome: "L'Ombra del Drago", obiettivo: "Sconfiggi il Drago Antico nell'Antro, a nord della cripta. L'ingresso è sigillato: ti serve la Chiave del Drago." },
   amuleto:     { nome: "L'Amuleto del Mercante", obiettivo: "Trova l'Amuleto Perduto nella stanza segreta (est del corridoio) e portalo al mercante." },
   prigioniero: { nome: "Il Prigioniero", obiettivo: "Libera il prigioniero nella cella sopra il laboratorio." },
 };
@@ -435,19 +442,32 @@ function schermataEsplorazione() {
         <button class="danger small" onclick="abbandona()">🚪 Menu</button>
       </div>
     </div>
+    ${pannelloStatistiche()}
   `;
   const dir = document.getElementById("dir");
   direzioni.forEach(d => {
     const destKey = stanza.uscite[d];
     const dest = MONDO[destKey];
     const conosciuta = stato.visitate[destKey];
+    const sigillata = destKey === "antro" && !stato.inventario.includes("chiave");
     const btn = document.createElement("button");
-    btn.innerHTML = `${frecce(d)} ${d[0].toUpperCase() + d.slice(1)}<br>
-      <span class="tag">${conosciuta ? dest.emoji + " " + dest.nome : "???"}</span>`;
-    btn.onclick = () => { stato.stanza = destKey; entraStanza(); };
+    btn.innerHTML = `${frecce(d)} ${d[0].toUpperCase() + d.slice(1)}${sigillata ? " 🔒" : ""}<br>
+      <span class="tag">${conosciuta || sigillata ? dest.emoji + " " + dest.nome : "???"}</span>`;
+    btn.onclick = () => provaSpostamento(destKey);
     dir.appendChild(btn);
   });
   renderLog();
+}
+
+// Spostamento con controllo del sigillo sull'Antro del Drago.
+function provaSpostamento(destKey) {
+  if (destKey === "antro" && !stato.inventario.includes("chiave")) {
+    log("Una barriera magica sigilla l'Antro del Drago. Ti serve la Chiave del Drago: liberare il prigioniero potrebbe aiutarti.", "log-bad");
+    schermataEsplorazione();
+    return;
+  }
+  stato.stanza = destKey;
+  entraStanza();
 }
 function frecce(d) { return { nord: "⬆", sud: "⬇", est: "➡", ovest: "⬅" }[d] || "•"; }
 function npcEtichetta(npc) {
@@ -482,18 +502,38 @@ function barreGiocatore() {
   return `
     <div class="panel">
       <div class="topbar">
-        <span><b>${CLASSI[p.classe].emoji} ${p.nome}</b> <span class="tag">Lv.${p.livello} ${p.classe}</span></span>
-        <span class="oro">🪙 ${p.oro}</span>
+        <span><b>${CLASSI[p.classe].emoji} ${p.nome}</b> <span class="tag">Lv.${p.livello}</span></span>
       </div>
-      <div class="bar-wrap">
-        <div class="bar-label"><span>PV</span><span>${p.pv}/${p.pvMax}</span></div>
-        <div class="bar hp"><div style="width:${100 * p.pv / p.pvMax}%"></div></div>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar-label"><span>Mana</span><span>${p.mana}/${p.manaMax}</span></div>
-        <div class="bar mana"><div style="width:${100 * p.mana / p.manaMax}%"></div></div>
+      <div class="vitals">
+        <span class="vital hp">♥️ ${p.pv}/${p.pvMax}</span>
+        <span class="vital mana">🔮 ${p.mana}/${p.manaMax}</span>
+        <span class="vital oro">🪙 ${p.oro}</span>
       </div>
       ${(p.effetti && p.effetti.length) ? `<div style="margin-top:6px">${tagsEffetti(p)}</div>` : ""}
+    </div>`;
+}
+
+// Pannello statistiche dettagliato: mostra come arma/armatura/effetti modificano i valori.
+function pannelloStatistiche() {
+  const p = stato;
+  const armaB = p.arma ? ITEMS[p.arma].bonus : 0;
+  const armB = p.armatura ? ITEMS[p.armatura].bonus : 0;
+  const forza = sommaEffetto(p, "forza");
+  return `
+    <div class="panel">
+      <h3 style="color:var(--accent); margin-top:0">📊 Statistiche</h3>
+      <div class="stats">
+        <div>⚔ Attacco: <span>${attaccoTotale(p)}</span>
+          <small>(base ${p.attacco}${armaB ? ` +${armaB} arma` : ""}${forza ? ` +${forza} forza` : ""})</small></div>
+        <div>🛡 Difesa: <span>${difesaTotale(p)}</span>
+          <small>(base ${p.difesa}${armB ? ` +${armB} armatura` : ""})</small></div>
+        <div>Arma: <span>${p.arma ? ITEMS[p.arma].nome : "nessuna"}</span></div>
+        <div>Armatura: <span>${p.armatura ? ITEMS[p.armatura].nome : "nessuna"}</span></div>
+        <div>♥️ PV max: <span>${p.pvMax}</span></div>
+        <div>🔮 Mana max: <span>${p.manaMax}</span></div>
+        <div>XP: <span>${p.xp}/${p.xpProssimo}</span></div>
+        <div>🪙 Oro: <span>${p.oro}</span></div>
+      </div>
     </div>`;
 }
 
@@ -757,10 +797,12 @@ function parlaPrigioniero() {
     stato.quest.prigioniero = "completata";
     stato.oro += 50;
     stato.inventario.push("lama");
+    stato.inventario.push("chiave");
     sfx("coin");
     schermataDialogo("🧎", "Il Prigioniero", [
       "«Grazie, mi hai liberato! Ero un cacciatore di draghi... prendi la mia Lama del Cacciatore.»",
-      "<i>Missione completata: Il Prigioniero. Ricevi 50 oro e la Lama del Cacciatore (+6 ATK).</i>",
+      "«E tieni questa: la Chiave del Drago. Senza, l'Antro resta sigillato da una barriera magica.»",
+      "<i>Missione completata: Il Prigioniero. Ricevi 50 oro, la Lama del Cacciatore (+6 ATK) e la Chiave del Drago.</i>",
       "«Un consiglio: il drago è vulnerabile al fuoco e ai veleni persistenti.»",
     ], [{ label: "← Torna indietro", fn: schermataEsplorazione }]);
   } else {
@@ -894,6 +936,7 @@ function schermataInventario() {
   const p = stato;
   app().innerHTML = `
     ${barreGiocatore()}
+    ${pannelloStatistiche()}
     <div class="panel">
       <h2 class="room-name">🎒 Inventario</h2>
       <div id="inv"></div>
