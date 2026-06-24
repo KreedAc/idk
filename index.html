@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminal RPG — La Cripta del Drago</title>
+<style>
+  :root {
+    --bg: #0e0c14;
+    --panel: #1a1726;
+    --panel2: #241f33;
+    --accent: #c9a45c;
+    --accent2: #7b5cff;
+    --text: #e8e3d8;
+    --muted: #9a93a8;
+    --hp: #d6453f;
+    --mana: #3f7fd6;
+    --xp: #c9a45c;
+    --good: #5fae62;
+    --bad: #d6453f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(circle at 50% 0%, #1c1730 0%, var(--bg) 70%);
+    color: var(--text);
+    font-family: "Georgia", "Times New Roman", serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+  }
+  #app {
+    width: 100%;
+    max-width: 720px;
+  }
+  h1, h2, h3 { font-family: "Georgia", serif; margin: 0.2em 0; }
+  .title {
+    text-align: center;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(201,164,92,0.4);
+  }
+  .subtitle { text-align: center; color: var(--muted); margin-bottom: 18px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid #322b45;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+  }
+  .room-name { color: var(--accent); border-bottom: 1px solid #322b45; padding-bottom: 6px; }
+  .room-desc { color: var(--muted); font-style: italic; margin: 10px 0; }
+  button {
+    font-family: inherit;
+    font-size: 15px;
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid #3d3551;
+    border-radius: 8px;
+    padding: 11px 14px;
+    margin: 4px 0;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: all 0.12s ease;
+  }
+  button:hover:not(:disabled) {
+    background: #2f2842;
+    border-color: var(--accent);
+    transform: translateX(2px);
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.primary {
+    background: linear-gradient(135deg, #4a3a7a, #2f2550);
+    border-color: var(--accent2);
+    text-align: center;
+  }
+  button.danger { border-color: #5a2f33; }
+  .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 480px) { .btn-grid { grid-template-columns: 1fr; } }
+  input[type=text] {
+    font-family: inherit; font-size: 16px;
+    background: #0f0d16; color: var(--text);
+    border: 1px solid #3d3551; border-radius: 8px;
+    padding: 10px; width: 100%; margin: 6px 0;
+  }
+  .bar-wrap { margin: 6px 0; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .bar { height: 14px; background: #0f0d16; border-radius: 7px; overflow: hidden; border: 1px solid #2a2438; }
+  .bar > div { height: 100%; transition: width 0.3s ease; }
+  .bar.hp > div { background: linear-gradient(90deg, #8a2a26, var(--hp)); }
+  .bar.mana > div { background: linear-gradient(90deg, #284f85, var(--mana)); }
+  .bar.xp > div { background: linear-gradient(90deg, #8a6f30, var(--xp)); }
+  .bar.enemy > div { background: linear-gradient(90deg, #6a2f6a, #b04ab0); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 14px; }
+  .stats span { color: var(--accent); }
+  #log {
+    background: #0a0810;
+    border: 1px solid #2a2438;
+    border-radius: 8px;
+    padding: 12px;
+    height: 180px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  #log p { margin: 3px 0; }
+  .log-good { color: var(--good); }
+  .log-bad { color: var(--bad); }
+  .log-crit { color: var(--accent); font-weight: bold; }
+  .log-sys { color: var(--accent2); }
+  .combatant { display: flex; justify-content: space-between; align-items: baseline; }
+  .combatant .name { font-weight: bold; }
+  .vs { text-align: center; color: var(--muted); margin: 8px 0; }
+  .footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .item-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .item-row button { width: auto; }
+  .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #2a2438; color: var(--muted); }
+  .equipped { color: var(--good); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+
+// ============================================================
+//  DATI DI GIOCO
+// ============================================================
+
+const CLASSI = {
+  Guerriero: { pv: 30, attacco: 8, difesa: 5, mana: 8, abilita: "Colpo Poderoso",
+    moltAbilita: 1.8, descrizione: "Robusto e potente in mischia." },
+  Mago:      { pv: 20, attacco: 11, difesa: 2, mana: 16, abilita: "Palla di Fuoco",
+    moltAbilita: 2.2, descrizione: "Fragile ma con attacchi devastanti." },
+  Ladro:     { pv: 24, attacco: 9, difesa: 3, mana: 10, abilita: "Colpo Furtivo",
+    moltAbilita: 2.0, descrizione: "Agile, con frequenti colpi critici." },
+};
+
+function item(nome, tipo, opts = {}) {
+  return Object.assign({ nome, tipo, cura: 0, bonus: 0, valore: 0 }, opts);
+}
+
+const ITEMS = {
+  pozMinore:   item("Pozione Minore", "pozione", { cura: 12, valore: 10 }),
+  pozMaggiore: item("Pozione Maggiore", "pozione", { cura: 30, valore: 25 }),
+  spada:       item("Spada Arrugginita", "arma", { bonus: 2, valore: 15 }),
+  ascia:       item("Ascia da Guerra", "arma", { bonus: 5, valore: 40 }),
+  pugnale:     item("Pugnale d'Ombra", "arma", { bonus: 4, valore: 35 }),
+  cuoio:       item("Corazza di Cuoio", "armatura", { bonus: 2, valore: 15 }),
+  maglia:      item("Cotta di Maglia", "armatura", { bonus: 4, valore: 40 }),
+};
+
+function nemico(nome, pv, attacco, difesa, xp, drop = null) {
+  return { nome, pvMax: pv, pv, attacco, difesa, xp, drop };
+}
+
+const NEMICI = {
+  ratto:     () => nemico("Ratto Gigante", 12, 4, 1, 8),
+  goblin:    () => nemico("Goblin", 18, 6, 2, 14, "pozMinore"),
+  scheletro: () => nemico("Scheletro", 22, 7, 3, 20, "spada"),
+  orco:      () => nemico("Orco Brutale", 34, 10, 4, 35, "maglia"),
+  drago:     () => nemico("Drago Antico", 70, 15, 8, 120, "pozMaggiore"),
+};
+
+const MONDO = {
+  ingresso: { nome: "Ingresso della Cripta",
+    desc: "Una soglia di pietra umida. Il buio ti chiama verso nord.",
+    uscite: { nord: "corridoio" }, bottino: ["pozMinore"] },
+  corridoio: { nome: "Corridoio Stretto",
+    desc: "Un corridoio illuminato da torce tremolanti. Senti squittii.",
+    uscite: { sud: "ingresso", nord: "sala", est: "cella" }, nemico: "ratto" },
+  cella: { nome: "Vecchia Cella",
+    desc: "Una cella abbandonata. Tra la paglia luccica qualcosa.",
+    uscite: { ovest: "corridoio" }, bottino: ["spada", "cuoio"] },
+  sala: { nome: "Sala delle Colonne",
+    desc: "Un'ampia sala con colonne spezzate. Un goblin ti ringhia contro.",
+    uscite: { sud: "corridoio", nord: "cripta", ovest: "armeria" }, nemico: "goblin" },
+  armeria: { nome: "Armeria Diroccata",
+    desc: "Rastrelliere arrugginite. Uno scheletro monta ancora la guardia.",
+    uscite: { est: "sala" }, nemico: "scheletro", bottino: ["ascia"] },
+  cripta: { nome: "Cripta Profonda",
+    desc: "Sarcofagi infranti. Un orco brutale emerge dall'ombra.",
+    uscite: { sud: "sala", nord: "antro" }, nemico: "orco", bottino: ["pozMaggiore"] },
+  antro: { nome: "Antro del Drago",
+    desc: "Una caverna rovente. Su un cumulo d'oro si erge un Drago Antico.",
+    uscite: { sud: "cripta" }, nemico: "drago", boss: true },
+};
+
+// ============================================================
+//  STATO
+// ============================================================
+
+let stato = null;       // stato della partita
+let combattimento = null; // nemico corrente in combattimento
+const SAVE_KEY = "terminal_rpg_save";
+
+function descBreve(it) {
+  if (it.tipo === "pozione") return `${it.nome} (cura ${it.cura} PV)`;
+  if (it.tipo === "arma") return `${it.nome} (+${it.bonus} ATK)`;
+  if (it.tipo === "armatura") return `${it.nome} (+${it.bonus} DIF)`;
+  return it.nome;
+}
+
+function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function attaccoTotale(p) { return p.attacco + (p.arma ? ITEMS[p.arma].bonus : 0); }
+function difesaTotale(p) { return p.difesa + (p.armatura ? ITEMS[p.armatura].bonus : 0); }
+
+// ============================================================
+//  LOG
+// ============================================================
+
+let logBuffer = [];
+function log(testo, classe = "") {
+  logBuffer.push({ testo, classe });
+  if (logBuffer.length > 60) logBuffer.shift();
+}
+function renderLog() {
+  const el = document.getElementById("log");
+  if (!el) return;
+  el.innerHTML = logBuffer.map(l => `<p class="${l.classe}">${l.testo}</p>`).join("");
+  el.scrollTop = el.scrollHeight;
+}
+
+// ============================================================
+//  SCHERMATE
+// ============================================================
+
+const app = () => document.getElementById("app");
+
+function schermataMenu() {
+  combattimento = null;
+  const haSave = localStorage.getItem(SAVE_KEY) !== null;
+  app().innerHTML = `
+    <h1 class="title">⚔ TERMINAL RPG ⚔</h1>
+    <p class="subtitle">La Cripta del Drago</p>
+    <div class="panel">
+      <p class="room-desc">Esplora la cripta, sconfiggi i mostri e abbatti il Drago Antico.
+      Scegli una classe, combatti a turni, cresci di livello e raccogli tesori.</p>
+      <button class="primary" onclick="schermataCreazione()">Nuova partita</button>
+      ${haSave ? `<button class="primary" onclick="caricaPartita()">Carica partita</button>` : ""}
+    </div>
+    <p class="footer">Suggerimento: la partita si salva nel tuo browser.</p>
+  `;
+}
+
+function schermataCreazione() {
+  const classi = Object.keys(CLASSI);
+  app().innerHTML = `
+    <h1 class="title">Crea il tuo eroe</h1>
+    <div class="panel">
+      <label>Nome dell'eroe:</label>
+      <input type="text" id="nomeInput" value="Eroe" maxlength="18">
+      <h3 style="color:var(--accent); margin-top:14px;">Scegli la classe</h3>
+      <div id="classi"></div>
+    </div>
+  `;
+  const cont = document.getElementById("classi");
+  classi.forEach(c => {
+    const b = CLASSI[c];
+    const btn = document.createElement("button");
+    btn.innerHTML = `<b>${c}</b> — ${b.descrizione}<br>
+      <span class="tag">PV ${b.pv}</span> <span class="tag">ATK ${b.attacco}</span>
+      <span class="tag">DIF ${b.difesa}</span> <span class="tag">Mana ${b.mana}</span>
+      <span class="tag">Abilità: ${b.abilita}</span>`;
+    btn.onclick = () => iniziaPartita(c);
+    cont.appendChild(btn);
+  });
+}
+
+function iniziaPartita(classe) {
+  const nome = (document.getElementById("nomeInput").value || "Eroe").trim();
+  const b = CLASSI[classe];
+  stato = {
+    nome, classe,
+    pvMax: b.pv, pv: b.pv,
+    manaMax: b.mana, mana: b.mana,
+    attacco: b.attacco, difesa: b.difesa,
+    livello: 1, xp: 0, xpProssimo: 20, oro: 0,
+    inventario: ["pozMinore"],
+    arma: null, armatura: null,
+    stanza: "ingresso",
+    ripulite: {},
+  };
+  logBuffer = [];
+  log(`${nome} il ${classe} inizia l'avventura!`, "log-sys");
+  entraStanza();
+}
+
+// ============================================================
+//  ESPLORAZIONE
+// ============================================================
+
+function entraStanza() {
+  const stanza = MONDO[stato.stanza];
+  const ripulita = stato.ripulite[stato.stanza];
+
+  // Nemico presente e stanza non ancora ripulita -> combattimento.
+  if (stanza.nemico && !ripulita) {
+    iniziaCombattimento(stanza.nemico);
+    return;
+  }
+  schermataEsplorazione();
+}
+
+function schermataEsplorazione() {
+  const stanza = MONDO[stato.stanza];
+  const p = stato;
+  const direzioni = Object.keys(stanza.uscite);
+
+  app().innerHTML = `
+    ${barreGiocatore()}
+    <div class="panel">
+      <h2 class="room-name">${stanza.nome}</h2>
+      <p class="room-desc">${stanza.desc}</p>
+    </div>
+    <div id="log"></div>
+    <div class="panel">
+      <h3 style="color:var(--muted)">Spostati</h3>
+      <div class="btn-grid" id="dir"></div>
+      <h3 style="color:var(--muted); margin-top:12px;">Azioni</h3>
+      <div class="btn-grid">
+        <button onclick="schermataPersonaggio()">📜 Personaggio</button>
+        <button onclick="schermataInventario()">🎒 Inventario</button>
+        <button onclick="salvaPartita()">💾 Salva</button>
+        <button class="danger" onclick="abbandona()">🚪 Menu</button>
+      </div>
+    </div>
+  `;
+  const dir = document.getElementById("dir");
+  direzioni.forEach(d => {
+    const dest = MONDO[stanza.uscite[d]];
+    const btn = document.createElement("button");
+    btn.innerHTML = `${frecce(d)} ${d.charAt(0).toUpperCase() + d.slice(1)}<br><span class="tag">${dest.nome}</span>`;
+    btn.onclick = () => { stato.stanza = stanza.uscite[d]; entraStanza(); };
+    dir.appendChild(btn);
+  });
+  renderLog();
+}
+
+function frecce(d) {
+  return { nord: "⬆", sud: "⬇", est: "➡", ovest: "⬅" }[d] || "•";
+}
+
+function raccogliBottino() {
+  const stanza = MONDO[stato.stanza];
+  if (stanza.bottino && stanza.bottino.length) {
+    stanza.bottino.forEach(k => {
+      stato.inventario.push(k);
+      log(`Trovi: ${descBreve(ITEMS[k])}`, "log-good");
+    });
+  }
+  stato.ripulite[stato.stanza] = true;
+}
+
+// ============================================================
+//  COMBATTIMENTO
+// ============================================================
+
+function iniziaCombattimento(chiaveNemico) {
+  combattimento = NEMICI[chiaveNemico]();
+  log(`⚔ Appare ${combattimento.nome}!`, "log-bad");
+  schermataCombattimento();
+}
+
+function barreGiocatore() {
+  const p = stato;
+  return `
+    <div class="panel">
+      <div class="combatant"><span class="name">${p.nome}</span>
+        <span class="tag">Lv.${p.livello} ${p.classe}</span></div>
+      <div class="bar-wrap">
+        <div class="bar-label"><span>PV</span><span>${p.pv}/${p.pvMax}</span></div>
+        <div class="bar hp"><div style="width:${100*p.pv/p.pvMax}%"></div></div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-label"><span>Mana</span><span>${p.mana}/${p.manaMax}</span></div>
+        <div class="bar mana"><div style="width:${100*p.mana/p.manaMax}%"></div></div>
+      </div>
+    </div>`;
+}
+
+function schermataCombattimento() {
+  const p = stato, n = combattimento;
+  const pozioni = p.inventario.filter(k => ITEMS[k].tipo === "pozione");
+  app().innerHTML = `
+    ${barreGiocatore()}
+    <div class="panel">
+      <div class="combatant"><span class="name" style="color:#b04ab0">${n.nome}</span>
+        <span class="tag">ATK ${n.attacco} DIF ${n.difesa}</span></div>
+      <div class="bar-wrap">
+        <div class="bar-label"><span>PV</span><span>${n.pv}/${n.pvMax}</span></div>
+        <div class="bar enemy"><div style="width:${100*n.pv/n.pvMax}%"></div></div>
+      </div>
+    </div>
+    <div id="log"></div>
+    <div class="panel">
+      <div class="btn-grid">
+        <button onclick="azioneAttacca()">🗡 Attacca</button>
+        <button onclick="azioneAbilita()" ${p.mana < 5 ? "disabled" : ""}>
+          ✨ ${CLASSI[p.classe].abilita} (5 mana)</button>
+        <button onclick="azionePozione()" ${pozioni.length ? "" : "disabled"}>
+          🧪 Pozione (${pozioni.length})</button>
+        <button onclick="azioneDifendi()">🛡 Difenditi</button>
+        <button class="danger" onclick="azioneFuga()">🏃 Fuggi</button>
+      </div>
+    </div>
+  `;
+  renderLog();
+}
+
+function turnoNemico() {
+  const n = combattimento, p = stato;
+  if (n.pv <= 0) return;
+  const base = n.attacco + rnd(-1, 2);
+  const danno = Math.max(1, base - difesaTotale(p));
+  p.pv = Math.max(0, p.pv - danno);
+  log(`${n.nome} ti colpisce per ${danno} danni.`, "log-bad");
+}
+
+function recuperaMana() {
+  if (stato.mana < stato.manaMax) stato.mana = Math.min(stato.manaMax, stato.mana + 1);
+}
+
+function dopoTurno() {
+  if (combattimento.pv <= 0) { vittoria(); return; }
+  turnoNemico();
+  recuperaMana();
+  if (stato.pv <= 0) { sconfitta(); return; }
+  schermataCombattimento();
+}
+
+function azioneAttacca() {
+  const p = stato, n = combattimento;
+  const critico = p.classe === "Ladro" && Math.random() < 0.25;
+  let base = attaccoTotale(p) + rnd(0, 3);
+  if (critico) base = Math.floor(base * 1.8);
+  const danno = Math.max(1, base - n.difesa);
+  n.pv = Math.max(0, n.pv - danno);
+  if (critico) log(`COLPO CRITICO! Infliggi ${danno} danni.`, "log-crit");
+  else log(`Attacchi ${n.nome} per ${danno} danni.`);
+  dopoTurno();
+}
+
+function azioneAbilita() {
+  const p = stato, n = combattimento;
+  if (p.mana < 5) return;
+  p.mana -= 5;
+  const base = Math.floor(attaccoTotale(p) * CLASSI[p.classe].moltAbilita) + rnd(0, 4);
+  const danno = Math.max(1, base - n.difesa);
+  n.pv = Math.max(0, n.pv - danno);
+  log(`Usi ${CLASSI[p.classe].abilita} e infliggi ${danno} danni!`, "log-crit");
+  dopoTurno();
+}
+
+function azionePozione() {
+  const p = stato;
+  const idx = p.inventario.findIndex(k => ITEMS[k].tipo === "pozione");
+  if (idx === -1) return;
+  const it = ITEMS[p.inventario[idx]];
+  const prima = p.pv;
+  p.pv = Math.min(p.pvMax, p.pv + it.cura);
+  log(`Bevi ${it.nome} e recuperi ${p.pv - prima} PV.`, "log-good");
+  p.inventario.splice(idx, 1);
+  dopoTurno();
+}
+
+function azioneDifendi() {
+  const p = stato, n = combattimento;
+  log("Ti metti in guardia, pronto a parare.");
+  const orig = p.difesa;
+  p.difesa += Math.max(3, p.difesa);
+  turnoNemico();
+  p.difesa = orig;
+  recuperaMana();
+  if (p.pv <= 0) { sconfitta(); return; }
+  schermataCombattimento();
+}
+
+function azioneFuga() {
+  const n = combattimento;
+  if (n.pvMax >= 60) {
+    log(`${n.nome} ti blocca la via! Non puoi fuggire.`, "log-bad");
+    turnoNemico();
+    recuperaMana();
+    if (stato.pv <= 0) { sconfitta(); return; }
+    schermataCombattimento();
+    return;
+  }
+  log("Ti ritiri dal combattimento.", "log-sys");
+  // Torna alla prima uscita disponibile.
+  const uscite = Object.values(MONDO[stato.stanza].uscite);
+  if (uscite.length) stato.stanza = uscite[0];
+  combattimento = null;
+  entraStanza();
+}
+
+function vittoria() {
+  const p = stato, n = combattimento;
+  log(`Hai sconfitto ${n.nome}!`, "log-good");
+  guadagnaXP(n.xp);
+  const oro = Math.max(1, Math.floor(n.xp / 2));
+  p.oro += oro;
+  log(`Raccogli ${oro} monete d'oro.`, "log-good");
+  if (n.drop) {
+    p.inventario.push(n.drop);
+    log(`${n.nome} lascia: ${descBreve(ITEMS[n.drop])}!`, "log-good");
+  }
+  const boss = MONDO[p.stanza].boss;
+  combattimento = null;
+  raccogliBottino();
+  if (boss) { vittoriaFinale(); return; }
+  schermataEsplorazione();
+}
+
+function guadagnaXP(q) {
+  const p = stato;
+  log(`Guadagni ${q} punti esperienza.`);
+  p.xp += q;
+  while (p.xp >= p.xpProssimo) {
+    p.xp -= p.xpProssimo;
+    p.livello += 1;
+    p.xpProssimo = Math.floor(p.xpProssimo * 1.5);
+    p.pvMax += 6; p.manaMax += 3; p.attacco += 2; p.difesa += 1;
+    p.pv = p.pvMax; p.mana = p.manaMax;
+    log(`★ LIVELLO ${p.livello}! PV+6, Mana+3, ATK+2, DIF+1. Recupero completo.`, "log-crit");
+  }
+}
+
+function vittoriaFinale() {
+  app().innerHTML = `
+    <h1 class="title">🏆 VITTORIA! 🏆</h1>
+    <div class="panel">
+      <p class="room-desc">Hai abbattuto il Drago Antico, ${stato.nome}!
+      La cripta è liberata. Il tuo nome diventa leggenda.</p>
+      <div class="stats">
+        <div>Livello finale: <span>${stato.livello}</span></div>
+        <div>Oro raccolto: <span>${stato.oro}</span></div>
+      </div>
+      <button class="primary" style="margin-top:14px" onclick="nuovaDaCapo()">Gioca di nuovo</button>
+    </div>
+  `;
+  localStorage.removeItem(SAVE_KEY);
+}
+
+function sconfitta() {
+  app().innerHTML = `
+    <h1 class="title" style="color:var(--bad)">☠ SEI MORTO ☠</h1>
+    <div class="panel">
+      <p class="room-desc">La tua avventura finisce qui... Le tue ossa si aggiungono
+      a quelle della cripta.</p>
+      <button class="primary" onclick="nuovaDaCapo()">Riprova</button>
+    </div>
+  `;
+  localStorage.removeItem(SAVE_KEY);
+}
+
+function nuovaDaCapo() {
+  // Ripristina lo stato runtime del mondo (bottino consumato in memoria).
+  location.reload();
+}
+
+// ============================================================
+//  PERSONAGGIO E INVENTARIO
+// ============================================================
+
+function schermataPersonaggio() {
+  const p = stato;
+  app().innerHTML = `
+    ${barreGiocatore()}
+    <div class="panel">
+      <h2 class="room-name">${p.nome} — ${p.classe} Lv.${p.livello}</h2>
+      <div class="stats" style="margin-top:10px">
+        <div>XP: <span>${p.xp}/${p.xpProssimo}</span></div>
+        <div>Oro: <span>${p.oro}</span></div>
+        <div>Attacco: <span>${attaccoTotale(p)}</span> (base ${p.attacco})</div>
+        <div>Difesa: <span>${difesaTotale(p)}</span> (base ${p.difesa})</div>
+        <div>Arma: <span>${p.arma ? ITEMS[p.arma].nome : "nessuna"}</span></div>
+        <div>Armatura: <span>${p.armatura ? ITEMS[p.armatura].nome : "nessuna"}</span></div>
+      </div>
+      <div class="bar-wrap" style="margin-top:10px">
+        <div class="bar-label"><span>Progresso livello</span><span>${p.xp}/${p.xpProssimo}</span></div>
+        <div class="bar xp"><div style="width:${100*p.xp/p.xpProssimo}%"></div></div>
+      </div>
+      <button style="margin-top:12px" onclick="schermataEsplorazione()">← Indietro</button>
+    </div>
+  `;
+}
+
+function schermataInventario() {
+  const p = stato;
+  app().innerHTML = `
+    ${barreGiocatore()}
+    <div class="panel">
+      <h2 class="room-name">🎒 Inventario</h2>
+      <div id="inv"></div>
+      <button style="margin-top:12px" onclick="schermataEsplorazione()">← Indietro</button>
+    </div>
+  `;
+  const inv = document.getElementById("inv");
+  if (!p.inventario.length) {
+    inv.innerHTML = `<p class="room-desc">Il tuo inventario è vuoto.</p>`;
+    return;
+  }
+  p.inventario.forEach((k, i) => {
+    const it = ITEMS[k];
+    const row = document.createElement("div");
+    row.className = "item-row";
+    let azione = "";
+    if (it.tipo === "pozione") azione = `<button onclick="usaPozioneInv(${i})">Bevi</button>`;
+    else if (it.tipo === "arma" || it.tipo === "armatura")
+      azione = `<button onclick="equipaggiaInv(${i})">Equipaggia</button>`;
+    row.innerHTML = `<span>${descBreve(it)} <span class="tag">${it.tipo}</span></span>${azione}`;
+    inv.appendChild(row);
+  });
+}
+
+function usaPozioneInv(i) {
+  const p = stato, it = ITEMS[p.inventario[i]];
+  const prima = p.pv;
+  p.pv = Math.min(p.pvMax, p.pv + it.cura);
+  log(`Bevi ${it.nome} e recuperi ${p.pv - prima} PV.`, "log-good");
+  p.inventario.splice(i, 1);
+  schermataInventario();
+}
+
+function equipaggiaInv(i) {
+  const p = stato, k = p.inventario[i], it = ITEMS[k];
+  if (it.tipo === "arma") {
+    const prec = p.arma; p.arma = k; p.inventario.splice(i, 1);
+    if (prec) p.inventario.push(prec);
+    log(`Impugni ${it.nome}.`, "log-sys");
+  } else if (it.tipo === "armatura") {
+    const prec = p.armatura; p.armatura = k; p.inventario.splice(i, 1);
+    if (prec) p.inventario.push(prec);
+    log(`Indossi ${it.nome}.`, "log-sys");
+  }
+  schermataInventario();
+}
+
+// ============================================================
+//  SALVATAGGIO
+// ============================================================
+
+function salvaPartita() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(stato));
+  log("Partita salvata nel browser.", "log-sys");
+  schermataEsplorazione();
+}
+
+function caricaPartita() {
+  const dati = localStorage.getItem(SAVE_KEY);
+  if (!dati) { schermataMenu(); return; }
+  try {
+    stato = JSON.parse(dati);
+    logBuffer = [];
+    log(`Bentornato, ${stato.nome}!`, "log-sys");
+    // Ricostruisci lo stato delle stanze ripulite nel mondo in memoria.
+    entraStanza();
+  } catch (e) {
+    schermataMenu();
+  }
+}
+
+function abbandona() {
+  if (confirm("Tornare al menu? Salva prima se non vuoi perdere i progressi.")) {
+    schermataMenu();
+  }
+}
+
+// Avvio.
+schermataMenu();
+</script>
+</body>
+</html>
