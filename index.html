@@ -98,13 +98,24 @@
   @keyframes pop { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
   .pop { animation: pop 0.4s ease; }
   /* Mini-mappa */
-  .map { display: grid; gap: 4px; justify-content: center; margin: 8px 0; }
+  .map { display: grid; gap: 4px; justify-content: center; margin: 4px 0 0; }
   .map .cell { width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center;
     justify-content: center; font-size: 19px; background: #120f1c; border: 1px solid #221c30; }
   .map .cell.visited { background: #221c30; border-color: #3d3551; }
   .map .cell.current { background: #3a2d5e; border-color: var(--accent); box-shadow: 0 0 8px rgba(201,164,92,0.5); }
   .map .cell.known { color: var(--muted); border-style: dashed; }
   .map .cell.empty { background: transparent; border-color: transparent; }
+  /* D-pad direzionale */
+  .card-h { color: var(--muted); margin: 0 0 8px; font-size: 14px; }
+  .dpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 300px; margin: 0 auto; }
+  .dcell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px; padding: 4px; width: auto; margin: 0; }
+  .dcell.empty { background: transparent; border: 0; pointer-events: none; }
+  .dcell.center { background: #2a2342; border-color: var(--accent2); font-size: 30px; cursor: default; }
+  .dcell.center:hover { transform: none; }
+  .darrow { font-size: 22px; line-height: 1; }
+  .dname { font-size: 9px; color: var(--muted); max-width: 80px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -238,15 +249,40 @@ const MONDO = {
     desc: "Un altare di luce calda emana pace. Puoi riposare qui.",
     uscite: { est: "cripta" }, npc: "altare" },
   antro:       { nome: "Antro del Drago", emoji: "🐉", x: 2, y: 0,
-    desc: "Una caverna rovente. Sul cumulo d'oro si erge il Drago Antico.",
+    desc: "Una caverna rovente. Sul cumulo d'oro si erge il Drago Antico; in fondo, Lady K. è incatenata alla roccia.",
     uscite: { sud: "cripta" }, nemico: "drago", boss: true },
 };
 const QUESTS = {
-  principale:  { nome: "L'Ombra del Drago", obiettivo: "Sconfiggi il Drago Antico nell'Antro, a nord della cripta. L'ingresso è sigillato: ti serve la Chiave del Drago." },
+  principale:  { nome: "Salva Lady K.", obiettivo: "Sconfiggi il Drago Antico nel suo antro per liberare Lady K. L'ingresso è sigillato: ti serve la Chiave del Drago." },
   amuleto:     { nome: "L'Amuleto del Mercante", obiettivo: "Trova l'Amuleto Perduto nella stanza segreta (est del corridoio) e portalo al mercante." },
   prigioniero: { nome: "Il Prigioniero", obiettivo: "Libera il prigioniero nella cella sopra il laboratorio: ti darà la Chiave del Drago." },
 };
 const NOMI_EFFETTO = { veleno: "Veleno", stordito: "Stordimento", rigenerazione: "Rigenerazione", forza: "Forza" };
+
+// ------------------------------------------------------------
+//  STORIA  —  tutti i testi narrativi in un solo posto, facili
+//  da riscrivere. Usa i segnaposto {nome} e {classe}.
+// ------------------------------------------------------------
+const STORIA = {
+  titolo: "La Cripta del Drago",
+  sottotitolo: "Salva Lady K. dal Drago Antico",
+  introMenu: "Il Drago Antico è piombato sul villaggio e ha rapito Lady K., trascinandola nella sua cripta. Solo un eroe può riportarla a casa.",
+  prologo: [
+    "Le campane del villaggio suonano a lutto.",
+    "Dal cielo è calato il Drago Antico, e tra fuoco e cenere ha rapito <b>Lady K.</b>, portandola nelle profondità della cripta.",
+    "Tu — {nome} il {classe} — sei l'unico ad avere il coraggio di scendere laggiù.",
+    "La sua vita è nelle tue mani. Trova il drago. Liberala.",
+  ],
+  finale: [
+    "Tra le fiamme morenti del drago, una voce flebile ti chiama.",
+    "<b>Lady K.</b> è viva! Spezzi le sue catene e la riporti verso la luce.",
+    "«Sapevo che saresti venuto, {nome}...»",
+    "Il regno è salvo, e il tuo nome sarà cantato per sempre.",
+  ],
+};
+function narra(testo) {
+  return testo.replace(/{nome}/g, stato.nome).replace(/{classe}/g, stato.classe);
+}
 
 // ============================================================
 //  STATO
@@ -380,12 +416,11 @@ function schermataMenu() {
   const haSave = localStorage.getItem(SAVE_KEY) !== null;
   app().innerHTML = `
     <h1 class="title">⚔ TERMINAL RPG ⚔</h1>
-    <p class="subtitle">La Cripta del Drago</p>
+    <p class="subtitle">${STORIA.sottotitolo}</p>
     <div class="panel">
-      <div class="sprite">🐉</div>
-      <p class="room-desc">Esplora la cripta, completa le missioni, sconfiggi i mostri
-      e abbatti il Drago Antico. Scegli una classe, padroneggia gli effetti di stato
-      e cresci di livello.</p>
+      <div class="sprite">🐉🔗👸</div>
+      <p class="room-desc">${STORIA.introMenu} Esplora la cripta, completa le missioni,
+      padroneggia gli effetti di stato e cresci di livello.</p>
       <button class="primary" onclick="schermataCreazione()">Nuova partita</button>
       ${haSave ? `<button class="primary" onclick="caricaPartita()">Carica partita</button>` : ""}
       <button class="small" onclick="toggleAudio()">${audioOn ? "🔊 Audio: attivo" : "🔇 Audio: spento"}</button>
@@ -429,8 +464,20 @@ function iniziaPartita(classe) {
     quest: { principale: "non_iniziata", amuleto: "non_iniziata", prigioniero: "non_iniziata" },
   };
   logBuffer = []; tabAttiva = "esplora"; saccaAperta = null;
-  log(`${nome} il ${classe} inizia l'avventura!`, "log-sys");
-  entraStanza();
+  log(`${nome} il ${classe} scende nella cripta per salvare Lady K.`, "log-sys");
+  schermataPrologo();
+}
+
+function schermataPrologo() {
+  schermataAttuale = schermataPrologo;
+  app().innerHTML = `
+    <h1 class="title">${STORIA.titolo}</h1>
+    <div class="panel">
+      <div class="sprite">🐉🔗👸</div>
+      ${STORIA.prologo.map(r => `<p class="room-desc">${narra(r)}</p>`).join("")}
+      <button class="primary" onclick="entraStanza()">Scendi nella cripta ▸</button>
+    </div>
+  `;
 }
 
 // ============================================================
@@ -458,17 +505,6 @@ function schermataGioco() {
 function contenutoEsplora() {
   const stanza = MONDO[stato.stanza];
   const npcBtn = stanza.npc ? `<button class="primary" onclick="interagisciNpc()">${npcEtichetta(stanza.npc)}</button>` : "";
-  let dirHtml = "";
-  Object.keys(stanza.uscite).forEach(d => {
-    const destKey = stanza.uscite[d];
-    const dest = MONDO[destKey];
-    const conosciuta = stato.visitate[destKey];
-    const sigillata = destKey === "antro" && !stato.inventario.includes("chiave");
-    const etichetta = (conosciuta || sigillata) ? `${dest.emoji} ${dest.nome}` : "???";
-    dirHtml += `<button onclick="provaSpostamento('${destKey}')">
-      ${frecce(d)} ${d[0].toUpperCase() + d.slice(1)}${sigillata ? " 🔒" : ""}<br>
-      <span class="tag">${etichetta}</span></button>`;
-  });
   return `
     <div class="panel">
       <h2 class="room-name">${stanza.emoji} ${stanza.nome}</h2>
@@ -476,14 +512,35 @@ function contenutoEsplora() {
       ${npcBtn}
     </div>
     <div class="panel">
-      <h3 style="color:var(--muted); margin-top:0">Spostati</h3>
-      <div class="btn-grid">${dirHtml}</div>
+      <h3 class="card-h">Spostati</h3>
+      ${renderDpad()}
+    </div>
+    <div class="panel">
+      <h3 class="card-h">Mappa</h3>
       ${renderMinimap()}
     </div>
     <div class="panel">
-      <h3 style="color:var(--muted); margin-top:0">Diario di viaggio</h3>
+      <h3 class="card-h">Diario di viaggio</h3>
       <div id="log"></div>
     </div>`;
+}
+function renderDpad() {
+  const stanza = MONDO[stato.stanza];
+  const cella = (d) => {
+    const destKey = stanza.uscite[d];
+    if (!destKey) return `<div class="dcell empty"></div>`;
+    const sigillata = destKey === "antro" && !stato.inventario.includes("chiave");
+    const conosciuta = stato.visitate[destKey];
+    const nome = (conosciuta || sigillata) ? MONDO[destKey].nome : "???";
+    return `<button class="dcell" onclick="provaSpostamento('${destKey}')">
+      <span class="darrow">${frecce(d)}</span>
+      <span class="dname">${sigillata ? "🔒 " : ""}${nome}</span></button>`;
+  };
+  return `<div class="dpad">
+    <div class="dcell empty"></div>${cella("nord")}<div class="dcell empty"></div>
+    ${cella("ovest")}<div class="dcell center">${stanza.emoji}</div>${cella("est")}
+    <div class="dcell empty"></div>${cella("sud")}<div class="dcell empty"></div>
+  </div>`;
 }
 function frecce(d) { return { nord: "⬆", sud: "⬇", est: "➡", ovest: "⬅" }[d] || "•"; }
 function npcEtichetta(npc) {
@@ -824,8 +881,7 @@ function vittoriaFinale() {
     <h1 class="title pop">🏆 VITTORIA! 🏆</h1>
     <div class="panel">
       <div class="sprite pop">🐉💥</div>
-      <p class="room-desc">Hai abbattuto il Drago Antico, ${stato.nome}!
-      La cripta è liberata e il tuo nome diventa leggenda.</p>
+      ${STORIA.finale.map(r => `<p class="room-desc">${narra(r)}</p>`).join("")}
       <div class="stats">
         <div>Livello finale: <span>${stato.livello}</span></div>
         <div>Oro raccolto: <span>${stato.oro}</span></div>
@@ -884,12 +940,12 @@ function parlaAnziano() {
   const righe = [];
   if (stato.quest.principale === "non_iniziata") {
     stato.quest.principale = "attiva";
-    righe.push("«Ascolta, eroe. In fondo a questa cripta dorme il Drago Antico. Solo abbattendolo libererai queste terre.»");
-    righe.push("<i>Nuova missione: L'Ombra del Drago.</i>");
+    righe.push(narra("«{nome}, il Drago Antico ha rapito Lady K. e la tiene prigioniera nel suo antro, in fondo alla cripta. Liberala: sei la sua unica speranza.»"));
+    righe.push("<i>Nuova missione: Salva Lady K.</i>");
   } else if (stato.quest.principale === "completata") {
-    righe.push("«Hai sconfitto il drago! Sei una leggenda vivente.»");
+    righe.push("«Hai salvato Lady K. e abbattuto il drago! Sei una leggenda vivente.»");
   } else {
-    righe.push("«Il drago ti attende a nord, oltre la cripta. L'ingresso è sigillato: cerca chi possiede la chiave.»");
+    righe.push("«Lady K. ti aspetta a nord, oltre la cripta. L'antro è sigillato: trova chi possiede la chiave.»");
   }
   schermataDialogo("🧙‍♂️", "L'Anziano", righe, [{ label: "← Torna indietro", fn: schermataGioco }]);
 }
@@ -928,50 +984,58 @@ function apriMercante() {
   schermataAttuale = apriMercante;
   const p = stato;
   if (p.quest.amuleto === "non_iniziata") { p.quest.amuleto = "attiva"; log("Nuova missione: L'Amuleto del Mercante.", "log-sys"); }
-  const inVendita = ["pozMinore", "pozMaggiore", "antidoto", "spada", "pugnale", "ascia", "cuoio", "maglia", "mantello"];
   const haAmuleto = p.inventario.includes("amuleto");
+  const pozioniShop = ["pozMinore", "pozMaggiore", "antidoto"];
+  const equipShop = ["spada", "pugnale", "ascia", "cuoio", "maglia", "mantello"];
+
+  // Riga di acquisto. conDelta mostra +verde/-rosso rispetto all'equipaggiato.
+  const rigaCompra = (k, conDelta) => {
+    const it = ITEMS[k], prezzo = it.valore;
+    const delta = conDelta ? " " + badgeDelta(it) : "";
+    const dis = p.oro < prezzo ? "disabled" : "";
+    return `<div class="item-row"><span>${descBreve(it)}${delta}</span>
+      <button class="small" ${dis} onclick="compra('${k}')">🪙 ${prezzo}</button></div>`;
+  };
+  const pozHtml = pozioniShop.map(k => rigaCompra(k, false)).join("");
+  const eqHtml = equipShop.map(k => rigaCompra(k, true)).join("");
+
+  const vendibili = p.inventario.map((k, i) => ({ k, i })).filter(x => ITEMS[x.k].tipo !== "tesoro");
+  const sellHtml = vendibili.length
+    ? vendibili.map(({ k, i }) => {
+        const it = ITEMS[k], prezzo = Math.floor(it.valore / 2);
+        return `<div class="item-row"><span>${descBreve(it)}</span>
+          <button class="small" onclick="vendi(${i})">🪙 ${prezzo}</button></div>`;
+      }).join("")
+    : `<p class="room-desc">Non hai nulla da vendere.</p>`;
+
   app().innerHTML = `
     <div class="panel" style="margin-top:10px">${headerVitali()}</div>
     <div class="panel">
       <div class="sprite">🧝</div>
       <h2 class="room-name">Il Mercante</h2>
-      <p class="room-desc">«Benvenuto! Compra, vendi... e se trovi il mio Amuleto Perduto
-      nella stanza segreta, sarò molto generoso.»</p>
+      <p class="room-desc">«Benvenuto! In <span class="delta-up">verde</span> ciò che ti migliora,
+      in <span class="delta-down">rosso</span> ciò che ti peggiora.»</p>
       ${haAmuleto && p.quest.amuleto === "attiva"
         ? `<button class="primary" onclick="consegnaAmuleto()">🎁 Consegna l'Amuleto Perduto</button>` : ""}
-      <h3 style="color:var(--accent)">Acquista</h3><div id="shopBuy"></div>
-      <h3 style="color:var(--accent); margin-top:10px">Vendi (metà prezzo)</h3><div id="shopSell"></div>
-      <button style="margin-top:12px" onclick="schermataGioco()">← Esci dal mercato</button>
     </div>
+    <div class="panel"><h3 class="card-h">🧪 Pozioni</h3>${pozHtml}</div>
+    <div class="panel"><h3 class="card-h">⚔️ Equipaggiamento</h3>${eqHtml}</div>
+    <div class="panel"><h3 class="card-h">💰 Vendita (metà prezzo)</h3>${sellHtml}</div>
+    <button onclick="schermataGioco()">← Esci dal mercato</button>
   `;
-  const buy = document.getElementById("shopBuy");
-  inVendita.forEach(k => {
-    const it = ITEMS[k], prezzo = it.valore;
-    const row = document.createElement("div"); row.className = "item-row";
-    row.innerHTML = `<span>${descBreve(it)} — <span class="vital oro">🪙 ${prezzo}</span></span>`;
-    const b = document.createElement("button"); b.className = "small"; b.textContent = "Compra";
-    b.disabled = p.oro < prezzo;
-    b.onclick = () => { p.oro -= prezzo; p.inventario.push(k); sfx("coin"); apriMercante(); };
-    row.appendChild(b); buy.appendChild(row);
-  });
-  const sell = document.getElementById("shopSell");
-  const vendibili = p.inventario.filter(k => ITEMS[k].tipo !== "tesoro");
-  if (!vendibili.length) { sell.innerHTML = `<p class="room-desc">Non hai nulla da vendere.</p>`; }
-  else p.inventario.forEach((k, i) => {
-    const it = ITEMS[k];
-    if (it.tipo === "tesoro") return;
-    const prezzo = Math.floor(it.valore / 2);
-    const row = document.createElement("div"); row.className = "item-row";
-    row.innerHTML = `<span>${descBreve(it)} — <span class="vital oro">🪙 ${prezzo}</span></span>`;
-    const b = document.createElement("button"); b.className = "small"; b.textContent = "Vendi";
-    b.onclick = () => {
-      p.oro += prezzo;
-      if (p.arma === k) p.arma = null;
-      if (p.armatura === k) p.armatura = null;
-      p.inventario.splice(i, 1); sfx("coin"); apriMercante();
-    };
-    row.appendChild(b); sell.appendChild(row);
-  });
+}
+function compra(k) {
+  const p = stato, prezzo = ITEMS[k].valore;
+  if (p.oro < prezzo) return;
+  p.oro -= prezzo; p.inventario.push(k); sfx("coin"); apriMercante();
+}
+function vendi(i) {
+  const p = stato, k = p.inventario[i];
+  if (!k || ITEMS[k].tipo === "tesoro") return;
+  p.oro += Math.floor(ITEMS[k].valore / 2);
+  if (p.arma === k) p.arma = null;
+  if (p.armatura === k) p.armatura = null;
+  p.inventario.splice(i, 1); sfx("coin"); apriMercante();
 }
 function consegnaAmuleto() {
   const p = stato;
