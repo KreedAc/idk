@@ -6,86 +6,41 @@
 <title>Terminal RPG — La Cripta del Drago</title>
 <style>
   :root {
-    --bg: #0e0c14;
-    --panel: #1a1726;
-    --panel2: #241f33;
-    --accent: #c9a45c;
-    --accent2: #7b5cff;
-    --text: #e8e3d8;
-    --muted: #9a93a8;
-    --hp: #d6453f;
-    --mana: #3f7fd6;
-    --xp: #c9a45c;
-    --good: #5fae62;
-    --bad: #d6453f;
+    --bg: #0e0c14; --panel: #1a1726; --panel2: #241f33;
+    --accent: #c9a45c; --accent2: #7b5cff; --text: #e8e3d8; --muted: #9a93a8;
+    --hp: #d6453f; --mana: #3f7fd6; --xp: #c9a45c;
+    --good: #5fae62; --bad: #d6453f;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: radial-gradient(circle at 50% 0%, #1c1730 0%, var(--bg) 70%);
-    color: var(--text);
-    font-family: "Georgia", "Times New Roman", serif;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    padding: 16px;
+    color: var(--text); font-family: "Georgia", "Times New Roman", serif;
+    min-height: 100vh; display: flex; justify-content: center; padding: 16px;
   }
-  #app {
-    width: 100%;
-    max-width: 720px;
-  }
+  #app { width: 100%; max-width: 740px; }
   h1, h2, h3 { font-family: "Georgia", serif; margin: 0.2em 0; }
-  .title {
-    text-align: center;
-    color: var(--accent);
-    letter-spacing: 2px;
-    text-shadow: 0 0 12px rgba(201,164,92,0.4);
-  }
+  .title { text-align: center; color: var(--accent); letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(201,164,92,0.4); }
   .subtitle { text-align: center; color: var(--muted); margin-bottom: 18px; }
-  .panel {
-    background: var(--panel);
-    border: 1px solid #322b45;
-    border-radius: 10px;
-    padding: 18px;
-    margin-bottom: 14px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
-  }
+  .panel { background: var(--panel); border: 1px solid #322b45; border-radius: 10px;
+    padding: 18px; margin-bottom: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
   .room-name { color: var(--accent); border-bottom: 1px solid #322b45; padding-bottom: 6px; }
   .room-desc { color: var(--muted); font-style: italic; margin: 10px 0; }
   button {
-    font-family: inherit;
-    font-size: 15px;
-    background: var(--panel2);
-    color: var(--text);
-    border: 1px solid #3d3551;
-    border-radius: 8px;
-    padding: 11px 14px;
-    margin: 4px 0;
-    cursor: pointer;
-    width: 100%;
-    text-align: left;
-    transition: all 0.12s ease;
+    font-family: inherit; font-size: 15px; background: var(--panel2); color: var(--text);
+    border: 1px solid #3d3551; border-radius: 8px; padding: 11px 14px; margin: 4px 0;
+    cursor: pointer; width: 100%; text-align: left; transition: all 0.12s ease;
   }
-  button:hover:not(:disabled) {
-    background: #2f2842;
-    border-color: var(--accent);
-    transform: translateX(2px);
-  }
+  button:hover:not(:disabled) { background: #2f2842; border-color: var(--accent); transform: translateX(2px); }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
-  button.primary {
-    background: linear-gradient(135deg, #4a3a7a, #2f2550);
-    border-color: var(--accent2);
-    text-align: center;
-  }
+  button.primary { background: linear-gradient(135deg, #4a3a7a, #2f2550); border-color: var(--accent2); text-align: center; }
   button.danger { border-color: #5a2f33; }
+  button.small { width: auto; padding: 7px 12px; font-size: 14px; }
   .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   @media (max-width: 480px) { .btn-grid { grid-template-columns: 1fr; } }
-  input[type=text] {
-    font-family: inherit; font-size: 16px;
-    background: #0f0d16; color: var(--text);
-    border: 1px solid #3d3551; border-radius: 8px;
-    padding: 10px; width: 100%; margin: 6px 0;
-  }
+  input[type=text] { font-family: inherit; font-size: 16px; background: #0f0d16; color: var(--text);
+    border: 1px solid #3d3551; border-radius: 8px; padding: 10px; width: 100%; margin: 6px 0; }
   .bar-wrap { margin: 6px 0; }
   .bar-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
   .bar { height: 14px; background: #0f0d16; border-radius: 7px; overflow: hidden; border: 1px solid #2a2438; }
@@ -96,30 +51,41 @@
   .bar.enemy > div { background: linear-gradient(90deg, #6a2f6a, #b04ab0); }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 14px; }
   .stats span { color: var(--accent); }
-  #log {
-    background: #0a0810;
-    border: 1px solid #2a2438;
-    border-radius: 8px;
-    padding: 12px;
-    height: 180px;
-    overflow-y: auto;
-    font-size: 14px;
-    line-height: 1.5;
-    margin-bottom: 12px;
-  }
+  #log { background: #0a0810; border: 1px solid #2a2438; border-radius: 8px; padding: 12px;
+    height: 170px; overflow-y: auto; font-size: 14px; line-height: 1.5; margin-bottom: 12px; }
   #log p { margin: 3px 0; }
-  .log-good { color: var(--good); }
-  .log-bad { color: var(--bad); }
-  .log-crit { color: var(--accent); font-weight: bold; }
-  .log-sys { color: var(--accent2); }
+  .log-good { color: var(--good); } .log-bad { color: var(--bad); }
+  .log-crit { color: var(--accent); font-weight: bold; } .log-sys { color: var(--accent2); }
   .combatant { display: flex; justify-content: space-between; align-items: baseline; }
   .combatant .name { font-weight: bold; }
-  .vs { text-align: center; color: var(--muted); margin: 8px 0; }
   .footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 10px; }
-  .item-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .item-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 3px 0; }
   .item-row button { width: auto; }
   .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #2a2438; color: var(--muted); }
+  .tag.fx-veleno { background: #2a4a2a; color: #9fe09f; }
+  .tag.fx-stordito { background: #4a4520; color: #e0d49f; }
+  .tag.fx-rigenerazione { background: #204a45; color: #9fe0d4; }
+  .tag.fx-forza { background: #4a2a20; color: #e0b09f; }
   .equipped { color: var(--good); }
+  .sprite { text-align: center; font-size: 60px; line-height: 1.1; margin: 6px 0; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .topbar .oro { color: var(--accent); }
+  /* Animazioni */
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+    40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(4px)} }
+  #app.shake { animation: shake 0.3s ease; }
+  @keyframes lunge { 0%{transform:scale(1)} 30%{transform:scale(1.25) rotate(-6deg)} 100%{transform:scale(1)} }
+  .sprite.lunge { animation: lunge 0.3s ease; }
+  @keyframes pop { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+  .pop { animation: pop 0.4s ease; }
+  /* Mini-mappa */
+  .map { display: grid; gap: 4px; justify-content: center; margin: 8px 0; }
+  .map .cell { width: 42px; height: 42px; border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; font-size: 20px; background: #120f1c; border: 1px solid #221c30; }
+  .map .cell.visited { background: #221c30; border-color: #3d3551; }
+  .map .cell.current { background: #3a2d5e; border-color: var(--accent); box-shadow: 0 0 8px rgba(201,164,92,0.5); }
+  .map .cell.known { color: var(--muted); border-style: dashed; }
+  .map .cell.empty { background: transparent; border-color: transparent; }
 </style>
 </head>
 <body>
@@ -129,92 +95,169 @@
 "use strict";
 
 // ============================================================
+//  AUDIO (effetti sonori generati dal browser)
+// ============================================================
+let audioCtx = null;
+let audioOn = localStorage.getItem("rpg_audio") !== "off";
+function ac() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function tone(freq, dur, type = "square", vol = 0.14, when = 0) {
+  if (!audioOn) return;
+  try {
+    const c = ac(); const o = c.createOscillator(); const g = c.createGain();
+    o.type = type; o.frequency.value = freq; o.connect(g); g.connect(c.destination);
+    const t = c.currentTime + when;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.start(t); o.stop(t + dur);
+  } catch (e) { /* audio non disponibile */ }
+}
+function sfx(name) {
+  if (!audioOn) return;
+  switch (name) {
+    case "hit": tone(200, 0.08, "square", 0.12); break;
+    case "crit": tone(380, 0.07, "sawtooth", 0.16); tone(280, 0.12, "sawtooth", 0.12, 0.05); break;
+    case "hurt": tone(110, 0.18, "square", 0.14); break;
+    case "heal": tone(500, 0.1, "sine", 0.12); tone(720, 0.14, "sine", 0.12, 0.08); break;
+    case "coin": tone(880, 0.05, "square", 0.1); tone(1180, 0.07, "square", 0.1, 0.05); break;
+    case "magic": tone(300, 0.2, "sine", 0.12); tone(620, 0.25, "sine", 0.1, 0.06); break;
+    case "poison": tone(150, 0.16, "square", 0.09); break;
+    case "level": [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.12, "triangle", 0.12, i * 0.09)); break;
+    case "victory": [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.16, "triangle", 0.13, i * 0.11)); break;
+    case "defeat": [400, 330, 260, 180].forEach((f, i) => tone(f, 0.22, "sawtooth", 0.12, i * 0.14)); break;
+  }
+}
+function toggleAudio() {
+  audioOn = !audioOn;
+  localStorage.setItem("rpg_audio", audioOn ? "on" : "off");
+  if (audioOn) sfx("coin");
+  rerender();
+}
+
+// ============================================================
 //  DATI DI GIOCO
 // ============================================================
-
-const CLASSI = {
-  Guerriero: { pv: 30, attacco: 8, difesa: 5, mana: 8, abilita: "Colpo Poderoso",
-    moltAbilita: 1.8, descrizione: "Robusto e potente in mischia." },
-  Mago:      { pv: 20, attacco: 11, difesa: 2, mana: 16, abilita: "Palla di Fuoco",
-    moltAbilita: 2.2, descrizione: "Fragile ma con attacchi devastanti." },
-  Ladro:     { pv: 24, attacco: 9, difesa: 3, mana: 10, abilita: "Colpo Furtivo",
-    moltAbilita: 2.0, descrizione: "Agile, con frequenti colpi critici." },
-};
-
 function item(nome, tipo, opts = {}) {
   return Object.assign({ nome, tipo, cura: 0, bonus: 0, valore: 0 }, opts);
 }
-
 const ITEMS = {
   pozMinore:   item("Pozione Minore", "pozione", { cura: 12, valore: 10 }),
   pozMaggiore: item("Pozione Maggiore", "pozione", { cura: 30, valore: 25 }),
+  antidoto:    item("Antidoto", "pozione", { cura: 6, valore: 12 }),
   spada:       item("Spada Arrugginita", "arma", { bonus: 2, valore: 15 }),
   ascia:       item("Ascia da Guerra", "arma", { bonus: 5, valore: 40 }),
   pugnale:     item("Pugnale d'Ombra", "arma", { bonus: 4, valore: 35 }),
+  lama:        item("Lama del Cacciatore", "arma", { bonus: 6, valore: 60 }),
   cuoio:       item("Corazza di Cuoio", "armatura", { bonus: 2, valore: 15 }),
   maglia:      item("Cotta di Maglia", "armatura", { bonus: 4, valore: 40 }),
+  mantello:    item("Mantello Arcano", "armatura", { bonus: 5, valore: 65 }),
+  amuleto:     item("Amuleto Perduto", "tesoro", { valore: 0 }),
+};
+const CLASSI = {
+  Guerriero: { pv: 30, attacco: 8, difesa: 5, mana: 8, abilita: "Colpo Poderoso",
+    moltAbilita: 1.8, emoji: "🛡️", descrizione: "Robusto; può stordire i nemici." },
+  Mago:      { pv: 20, attacco: 11, difesa: 2, mana: 16, abilita: "Palla di Fuoco",
+    moltAbilita: 2.2, emoji: "🔮", descrizione: "Fragile ma incendia i nemici." },
+  Ladro:     { pv: 24, attacco: 9, difesa: 3, mana: 10, abilita: "Colpo Furtivo",
+    moltAbilita: 2.0, emoji: "🗡️", descrizione: "Critici frequenti e ferite sanguinanti." },
 };
 
-function nemico(nome, pv, attacco, difesa, xp, drop = null) {
-  return { nome, pvMax: pv, pv, attacco, difesa, xp, drop };
+// Nemici: factory che restituisce un'istanza fresca.
+function nemico(nome, emoji, pv, attacco, difesa, xp, opts = {}) {
+  return { nome, emoji, pvMax: pv, pv, attacco, difesa, xp,
+    drop: opts.drop || null, inflitto: opts.inflitto || null, effetti: [] };
 }
-
 const NEMICI = {
-  ratto:     () => nemico("Ratto Gigante", 12, 4, 1, 8),
-  goblin:    () => nemico("Goblin", 18, 6, 2, 14, "pozMinore"),
-  scheletro: () => nemico("Scheletro", 22, 7, 3, 20, "spada"),
-  orco:      () => nemico("Orco Brutale", 34, 10, 4, 35, "maglia"),
-  drago:     () => nemico("Drago Antico", 70, 15, 8, 120, "pozMaggiore"),
+  ratto:     () => nemico("Ratto Gigante", "🐀", 12, 4, 1, 8),
+  slime:     () => nemico("Melma Acida", "🟢", 16, 4, 2, 12, { inflitto: { tipo: "veleno", prob: 0.35, turni: 2, valore: 2 } }),
+  ragno:     () => nemico("Ragno Velenoso", "🕷️", 18, 5, 2, 16, { drop: "pozMinore", inflitto: { tipo: "veleno", prob: 0.55, turni: 3, valore: 2 } }),
+  goblin:    () => nemico("Goblin", "👺", 20, 6, 2, 14, { drop: "pozMinore" }),
+  scheletro: () => nemico("Scheletro", "💀", 24, 7, 3, 20, { drop: "spada" }),
+  mago:      () => nemico("Mago Oscuro", "🧙", 22, 9, 2, 30, { drop: "pozMaggiore", inflitto: { tipo: "stordito", prob: 0.35, turni: 1, valore: 0 } }),
+  orco:      () => nemico("Orco Brutale", "👹", 36, 10, 4, 35, { drop: "maglia" }),
+  drago:     () => nemico("Drago Antico", "🐉", 80, 15, 8, 120, { drop: "pozMaggiore", inflitto: { tipo: "veleno", prob: 0.45, turni: 3, valore: 4 } }),
 };
 
+// Mondo: stanze con coordinate (per la mini-mappa), uscite, nemici, bottino, NPC.
 const MONDO = {
-  ingresso: { nome: "Ingresso della Cripta",
-    desc: "Una soglia di pietra umida. Il buio ti chiama verso nord.",
-    uscite: { nord: "corridoio" }, bottino: ["pozMinore"] },
-  corridoio: { nome: "Corridoio Stretto",
-    desc: "Un corridoio illuminato da torce tremolanti. Senti squittii.",
-    uscite: { sud: "ingresso", nord: "sala", est: "cella" }, nemico: "ratto" },
-  cella: { nome: "Vecchia Cella",
-    desc: "Una cella abbandonata. Tra la paglia luccica qualcosa.",
-    uscite: { ovest: "corridoio" }, bottino: ["spada", "cuoio"] },
-  sala: { nome: "Sala delle Colonne",
-    desc: "Un'ampia sala con colonne spezzate. Un goblin ti ringhia contro.",
-    uscite: { sud: "corridoio", nord: "cripta", ovest: "armeria" }, nemico: "goblin" },
-  armeria: { nome: "Armeria Diroccata",
+  ingresso:    { nome: "Ingresso della Cripta", emoji: "🚪", x: 2, y: 4,
+    desc: "Una soglia di pietra umida. Un vecchio incappucciato ti osserva.",
+    uscite: { nord: "corridoio" }, npc: "anziano" },
+  corridoio:   { nome: "Corridoio Stretto", emoji: "🕯️", x: 2, y: 3,
+    desc: "Torce tremolanti. Bivi si aprono a ovest, est e nord.",
+    uscite: { sud: "ingresso", ovest: "cella", est: "segreta", nord: "accampamento" }, nemico: "ratto" },
+  cella:       { nome: "Vecchia Cella", emoji: "🔒", x: 1, y: 3,
+    desc: "Una cella abbandonata. Una melma ribolle nell'angolo.",
+    uscite: { est: "corridoio" }, nemico: "slime", bottino: ["spada", "cuoio"] },
+  segreta:     { nome: "Stanza Segreta", emoji: "💎", x: 3, y: 3,
+    desc: "Una stanza nascosta. Un ragno gigante custodisce qualcosa di luccicante.",
+    uscite: { ovest: "corridoio" }, nemico: "ragno", bottino: ["amuleto", "pozMinore"] },
+  accampamento:{ nome: "Accampamento", emoji: "🏕️", x: 2, y: 2,
+    desc: "Un rifugio sicuro illuminato da un falò. Un mercante ti fa cenno.",
+    uscite: { sud: "corridoio", ovest: "sala", est: "laboratorio", nord: "cripta" }, npc: "mercante" },
+  sala:        { nome: "Sala delle Colonne", emoji: "🏛️", x: 1, y: 2,
+    desc: "Colonne spezzate. Un goblin ti ringhia contro.",
+    uscite: { est: "accampamento", ovest: "armeria" }, nemico: "goblin" },
+  armeria:     { nome: "Armeria Diroccata", emoji: "⚒️", x: 0, y: 2,
     desc: "Rastrelliere arrugginite. Uno scheletro monta ancora la guardia.",
     uscite: { est: "sala" }, nemico: "scheletro", bottino: ["ascia"] },
-  cripta: { nome: "Cripta Profonda",
+  laboratorio: { nome: "Laboratorio Arcano", emoji: "⚗️", x: 3, y: 2,
+    desc: "Alambicchi e rune. Un mago oscuro intona un incantesimo.",
+    uscite: { ovest: "accampamento", nord: "prigione" }, nemico: "mago", bottino: ["pozMaggiore"] },
+  prigione:    { nome: "Prigione", emoji: "⛓️", x: 3, y: 1,
+    desc: "Sbarre arrugginite. Un prigioniero ti chiama da una cella.",
+    uscite: { sud: "laboratorio" }, npc: "prigioniero" },
+  cripta:      { nome: "Cripta Profonda", emoji: "⚰️", x: 2, y: 1,
     desc: "Sarcofagi infranti. Un orco brutale emerge dall'ombra.",
-    uscite: { sud: "sala", nord: "antro" }, nemico: "orco", bottino: ["pozMaggiore"] },
-  antro: { nome: "Antro del Drago",
-    desc: "Una caverna rovente. Su un cumulo d'oro si erge un Drago Antico.",
+    uscite: { sud: "accampamento", nord: "antro", ovest: "santuario" }, nemico: "orco", bottino: ["pozMaggiore"] },
+  santuario:   { nome: "Santuario", emoji: "⛪", x: 1, y: 1,
+    desc: "Un altare di luce calda emana pace. Puoi riposare qui.",
+    uscite: { est: "cripta" }, npc: "altare" },
+  antro:       { nome: "Antro del Drago", emoji: "🐉", x: 2, y: 0,
+    desc: "Una caverna rovente. Sul cumulo d'oro si erge il Drago Antico.",
     uscite: { sud: "cripta" }, nemico: "drago", boss: true },
 };
+
+const QUESTS = {
+  principale:  { nome: "L'Ombra del Drago", obiettivo: "Sconfiggi il Drago Antico nell'Antro, a nord della cripta." },
+  amuleto:     { nome: "L'Amuleto del Mercante", obiettivo: "Trova l'Amuleto Perduto nella stanza segreta (est del corridoio) e portalo al mercante." },
+  prigioniero: { nome: "Il Prigioniero", obiettivo: "Libera il prigioniero nella cella sopra il laboratorio." },
+};
+
+const NOMI_EFFETTO = { veleno: "Veleno", stordito: "Stordimento", rigenerazione: "Rigenerazione", forza: "Forza" };
 
 // ============================================================
 //  STATO
 // ============================================================
+let stato = null;
+let combattimento = null;
+let schermataAttuale = null;   // funzione di render corrente (per rerender)
+let fxEnemy = false, fxShake = false, fxLevel = false;
+const SAVE_KEY = "terminal_rpg_save_v2";
+const app = () => document.getElementById("app");
 
-let stato = null;       // stato della partita
-let combattimento = null; // nemico corrente in combattimento
-const SAVE_KEY = "terminal_rpg_save";
-
+function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function descBreve(it) {
   if (it.tipo === "pozione") return `${it.nome} (cura ${it.cura} PV)`;
   if (it.tipo === "arma") return `${it.nome} (+${it.bonus} ATK)`;
   if (it.tipo === "armatura") return `${it.nome} (+${it.bonus} DIF)`;
   return it.nome;
 }
-
-function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
-function attaccoTotale(p) { return p.attacco + (p.arma ? ITEMS[p.arma].bonus : 0); }
-function difesaTotale(p) { return p.difesa + (p.armatura ? ITEMS[p.armatura].bonus : 0); }
+function sommaEffetto(e, tipo) {
+  return (e.effetti || []).filter(x => x.tipo === tipo).reduce((s, x) => s + x.valore, 0);
+}
+function attaccoTotale(p) {
+  return p.attacco + (p.arma ? ITEMS[p.arma].bonus : 0) + sommaEffetto(p, "forza");
+}
+function difesaTotale(p) {
+  return p.difesa + (p.armatura ? ITEMS[p.armatura].bonus : 0);
+}
 
 // ============================================================
 //  LOG
 // ============================================================
-
 let logBuffer = [];
 function log(testo, classe = "") {
   logBuffer.push({ testo, classe });
@@ -228,29 +271,67 @@ function renderLog() {
 }
 
 // ============================================================
-//  SCHERMATE
+//  EFFETTI DI STATO
 // ============================================================
+function applica(ent, tipo, turni, valore) {
+  ent.effetti = ent.effetti || [];
+  ent.effetti.push({ tipo, turni, valore });
+}
+function tagsEffetti(ent) {
+  return (ent.effetti || []).map(e => {
+    const v = e.tipo === "stordito" ? "" : ` ${e.valore}`;
+    return `<span class="tag fx-${e.tipo}">${NOMI_EFFETTO[e.tipo]}${v} (${e.turni})</span>`;
+  }).join(" ");
+}
+// Elabora gli effetti a inizio turno. Restituisce { stordito, msg:[{t,c}] }.
+function processoInizio(ent, nome) {
+  const msg = []; let stordito = false; const restanti = [];
+  for (const ef of (ent.effetti || [])) {
+    if (ef.tipo === "veleno") {
+      ent.pv = Math.max(0, ent.pv - ef.valore);
+      msg.push({ t: `${nome}: ${ef.valore} danni da veleno/bruciatura.`, c: "log-bad" });
+      sfx("poison");
+    } else if (ef.tipo === "rigenerazione") {
+      const before = ent.pv; ent.pv = Math.min(ent.pvMax, ent.pv + ef.valore);
+      msg.push({ t: `${nome}: rigeneri ${ent.pv - before} PV.`, c: "log-good" });
+    } else if (ef.tipo === "stordito") {
+      stordito = true; msg.push({ t: `${nome}: stordito, salta il turno!`, c: "log-sys" });
+    }
+    ef.turni -= 1;
+    if (ef.turni > 0) restanti.push(ef);
+    else if (ef.tipo === "forza") msg.push({ t: `${nome}: l'effetto Forza svanisce.`, c: "log-sys" });
+  }
+  ent.effetti = restanti;
+  return { stordito, msg };
+}
 
-const app = () => document.getElementById("app");
+// ============================================================
+//  SCHERMATE — utilità di render
+// ============================================================
+function rerender() { if (schermataAttuale) schermataAttuale(); }
 
 function schermataMenu() {
+  schermataAttuale = schermataMenu;
   combattimento = null;
   const haSave = localStorage.getItem(SAVE_KEY) !== null;
   app().innerHTML = `
     <h1 class="title">⚔ TERMINAL RPG ⚔</h1>
     <p class="subtitle">La Cripta del Drago</p>
     <div class="panel">
-      <p class="room-desc">Esplora la cripta, sconfiggi i mostri e abbatti il Drago Antico.
-      Scegli una classe, combatti a turni, cresci di livello e raccogli tesori.</p>
+      <div class="sprite">🐉</div>
+      <p class="room-desc">Esplora la cripta, completa le missioni, sconfiggi i mostri
+      e abbatti il Drago Antico. Scegli una classe, padroneggia gli effetti di stato
+      e cresci di livello.</p>
       <button class="primary" onclick="schermataCreazione()">Nuova partita</button>
       ${haSave ? `<button class="primary" onclick="caricaPartita()">Carica partita</button>` : ""}
+      <button class="small" onclick="toggleAudio()">${audioOn ? "🔊 Audio: attivo" : "🔇 Audio: spento"}</button>
     </div>
-    <p class="footer">Suggerimento: la partita si salva nel tuo browser.</p>
+    <p class="footer">La partita si salva nel tuo browser.</p>
   `;
 }
 
 function schermataCreazione() {
-  const classi = Object.keys(CLASSI);
+  schermataAttuale = schermataCreazione;
   app().innerHTML = `
     <h1 class="title">Crea il tuo eroe</h1>
     <div class="panel">
@@ -261,31 +342,27 @@ function schermataCreazione() {
     </div>
   `;
   const cont = document.getElementById("classi");
-  classi.forEach(c => {
+  Object.keys(CLASSI).forEach(c => {
     const b = CLASSI[c];
     const btn = document.createElement("button");
-    btn.innerHTML = `<b>${c}</b> — ${b.descrizione}<br>
+    btn.innerHTML = `<b>${b.emoji} ${c}</b> — ${b.descrizione}<br>
       <span class="tag">PV ${b.pv}</span> <span class="tag">ATK ${b.attacco}</span>
       <span class="tag">DIF ${b.difesa}</span> <span class="tag">Mana ${b.mana}</span>
-      <span class="tag">Abilità: ${b.abilita}</span>`;
+      <span class="tag">${b.abilita}</span>`;
     btn.onclick = () => iniziaPartita(c);
     cont.appendChild(btn);
   });
 }
 
 function iniziaPartita(classe) {
-  const nome = (document.getElementById("nomeInput").value || "Eroe").trim();
+  const nome = (document.getElementById("nomeInput").value || "Eroe").trim() || "Eroe";
   const b = CLASSI[classe];
   stato = {
-    nome, classe,
-    pvMax: b.pv, pv: b.pv,
-    manaMax: b.mana, mana: b.mana,
-    attacco: b.attacco, difesa: b.difesa,
-    livello: 1, xp: 0, xpProssimo: 20, oro: 0,
-    inventario: ["pozMinore"],
-    arma: null, armatura: null,
-    stanza: "ingresso",
-    ripulite: {},
+    nome, classe, pvMax: b.pv, pv: b.pv, manaMax: b.mana, mana: b.mana,
+    attacco: b.attacco, difesa: b.difesa, livello: 1, xp: 0, xpProssimo: 20, oro: 25,
+    inventario: ["pozMinore"], arma: null, armatura: null, stanza: "ingresso",
+    ripulite: {}, visitate: {}, effetti: [],
+    quest: { principale: "non_iniziata", amuleto: "non_iniziata", prigioniero: "non_iniziata" },
   };
   logBuffer = [];
   log(`${nome} il ${classe} inizia l'avventura!`, "log-sys");
@@ -295,65 +372,97 @@ function iniziaPartita(classe) {
 // ============================================================
 //  ESPLORAZIONE
 // ============================================================
-
 function entraStanza() {
+  stato.visitate[stato.stanza] = true;
   const stanza = MONDO[stato.stanza];
-  const ripulita = stato.ripulite[stato.stanza];
-
-  // Nemico presente e stanza non ancora ripulita -> combattimento.
-  if (stanza.nemico && !ripulita) {
+  if (stanza.nemico && !stato.ripulite[stato.stanza]) {
     iniziaCombattimento(stanza.nemico);
     return;
   }
   schermataEsplorazione();
 }
 
-function schermataEsplorazione() {
-  const stanza = MONDO[stato.stanza];
-  const p = stato;
-  const direzioni = Object.keys(stanza.uscite);
+function renderMinimap() {
+  let maxX = 0, maxY = 0;
+  for (const k in MONDO) { maxX = Math.max(maxX, MONDO[k].x); maxY = Math.max(maxY, MONDO[k].y); }
+  const griglia = {};
+  for (const k in MONDO) griglia[`${MONDO[k].x},${MONDO[k].y}`] = k;
+  // Stanze "note": uscite di stanze già visitate.
+  const note = {};
+  for (const k in stato.visitate) {
+    for (const d in MONDO[k].uscite) note[MONDO[k].uscite[d]] = true;
+  }
+  let html = `<div class="map" style="grid-template-columns: repeat(${maxX + 1}, 42px)">`;
+  for (let y = 0; y <= maxY; y++) {
+    for (let x = 0; x <= maxX; x++) {
+      const key = griglia[`${x},${y}`];
+      if (!key) { html += `<div class="cell empty"></div>`; continue; }
+      if (key === stato.stanza) html += `<div class="cell current">${MONDO[key].emoji}</div>`;
+      else if (stato.visitate[key]) html += `<div class="cell visited">${MONDO[key].emoji}</div>`;
+      else if (note[key]) html += `<div class="cell known">?</div>`;
+      else html += `<div class="cell empty"></div>`;
+    }
+  }
+  html += `</div>`;
+  return html;
+}
 
+function schermataEsplorazione() {
+  schermataAttuale = schermataEsplorazione;
+  const stanza = MONDO[stato.stanza];
+  const direzioni = Object.keys(stanza.uscite);
+  const npcBtn = stanza.npc ? `<button class="primary" onclick="interagisciNpc()">${npcEtichetta(stanza.npc)}</button>` : "";
   app().innerHTML = `
     ${barreGiocatore()}
     <div class="panel">
-      <h2 class="room-name">${stanza.nome}</h2>
+      <h2 class="room-name">${stanza.emoji} ${stanza.nome}</h2>
       <p class="room-desc">${stanza.desc}</p>
+      ${npcBtn}
     </div>
     <div id="log"></div>
     <div class="panel">
+      <h3 style="color:var(--muted)">Mappa</h3>
+      ${renderMinimap()}
       <h3 style="color:var(--muted)">Spostati</h3>
       <div class="btn-grid" id="dir"></div>
       <h3 style="color:var(--muted); margin-top:12px;">Azioni</h3>
       <div class="btn-grid">
         <button onclick="schermataPersonaggio()">📜 Personaggio</button>
         <button onclick="schermataInventario()">🎒 Inventario</button>
+        <button onclick="schermataDiario()">📖 Diario</button>
         <button onclick="salvaPartita()">💾 Salva</button>
-        <button class="danger" onclick="abbandona()">🚪 Menu</button>
+        <button class="small" onclick="toggleAudio()">${audioOn ? "🔊" : "🔇"} Audio</button>
+        <button class="danger small" onclick="abbandona()">🚪 Menu</button>
       </div>
     </div>
   `;
   const dir = document.getElementById("dir");
   direzioni.forEach(d => {
-    const dest = MONDO[stanza.uscite[d]];
+    const destKey = stanza.uscite[d];
+    const dest = MONDO[destKey];
+    const conosciuta = stato.visitate[destKey];
     const btn = document.createElement("button");
-    btn.innerHTML = `${frecce(d)} ${d.charAt(0).toUpperCase() + d.slice(1)}<br><span class="tag">${dest.nome}</span>`;
-    btn.onclick = () => { stato.stanza = stanza.uscite[d]; entraStanza(); };
+    btn.innerHTML = `${frecce(d)} ${d[0].toUpperCase() + d.slice(1)}<br>
+      <span class="tag">${conosciuta ? dest.emoji + " " + dest.nome : "???"}</span>`;
+    btn.onclick = () => { stato.stanza = destKey; entraStanza(); };
     dir.appendChild(btn);
   });
   renderLog();
 }
-
-function frecce(d) {
-  return { nord: "⬆", sud: "⬇", est: "➡", ovest: "⬅" }[d] || "•";
+function frecce(d) { return { nord: "⬆", sud: "⬇", est: "➡", ovest: "⬅" }[d] || "•"; }
+function npcEtichetta(npc) {
+  return { anziano: "🧙‍♂️ Parla con l'Anziano", mercante: "🧝 Visita il Mercante",
+    prigioniero: "🧎 Avvicinati al prigioniero", altare: "✨ Riposa all'altare" }[npc] || "Interagisci";
 }
 
 function raccogliBottino() {
   const stanza = MONDO[stato.stanza];
-  if (stanza.bottino && stanza.bottino.length) {
+  if (stanza.bottino && stanza.bottino.length && !stato.ripulite[stato.stanza]) {
     stanza.bottino.forEach(k => {
       stato.inventario.push(k);
       log(`Trovi: ${descBreve(ITEMS[k])}`, "log-good");
     });
+    sfx("coin");
   }
   stato.ripulite[stato.stanza] = true;
 }
@@ -361,9 +470,9 @@ function raccogliBottino() {
 // ============================================================
 //  COMBATTIMENTO
 // ============================================================
-
 function iniziaCombattimento(chiaveNemico) {
   combattimento = NEMICI[chiaveNemico]();
+  fxEnemy = fxShake = false;
   log(`⚔ Appare ${combattimento.nome}!`, "log-bad");
   schermataCombattimento();
 }
@@ -372,146 +481,173 @@ function barreGiocatore() {
   const p = stato;
   return `
     <div class="panel">
-      <div class="combatant"><span class="name">${p.nome}</span>
-        <span class="tag">Lv.${p.livello} ${p.classe}</span></div>
+      <div class="topbar">
+        <span><b>${CLASSI[p.classe].emoji} ${p.nome}</b> <span class="tag">Lv.${p.livello} ${p.classe}</span></span>
+        <span class="oro">🪙 ${p.oro}</span>
+      </div>
       <div class="bar-wrap">
         <div class="bar-label"><span>PV</span><span>${p.pv}/${p.pvMax}</span></div>
-        <div class="bar hp"><div style="width:${100*p.pv/p.pvMax}%"></div></div>
+        <div class="bar hp"><div style="width:${100 * p.pv / p.pvMax}%"></div></div>
       </div>
       <div class="bar-wrap">
         <div class="bar-label"><span>Mana</span><span>${p.mana}/${p.manaMax}</span></div>
-        <div class="bar mana"><div style="width:${100*p.mana/p.manaMax}%"></div></div>
+        <div class="bar mana"><div style="width:${100 * p.mana / p.manaMax}%"></div></div>
       </div>
+      ${(p.effetti && p.effetti.length) ? `<div style="margin-top:6px">${tagsEffetti(p)}</div>` : ""}
     </div>`;
 }
 
 function schermataCombattimento() {
+  schermataAttuale = schermataCombattimento;
   const p = stato, n = combattimento;
   const pozioni = p.inventario.filter(k => ITEMS[k].tipo === "pozione");
   app().innerHTML = `
     ${barreGiocatore()}
     <div class="panel">
+      <div class="sprite" id="enemySprite">${n.emoji}</div>
       <div class="combatant"><span class="name" style="color:#b04ab0">${n.nome}</span>
         <span class="tag">ATK ${n.attacco} DIF ${n.difesa}</span></div>
       <div class="bar-wrap">
         <div class="bar-label"><span>PV</span><span>${n.pv}/${n.pvMax}</span></div>
-        <div class="bar enemy"><div style="width:${100*n.pv/n.pvMax}%"></div></div>
+        <div class="bar enemy"><div style="width:${100 * n.pv / n.pvMax}%"></div></div>
       </div>
+      ${(n.effetti && n.effetti.length) ? `<div style="margin-top:6px">${tagsEffetti(n)}</div>` : ""}
     </div>
     <div id="log"></div>
     <div class="panel">
       <div class="btn-grid">
         <button onclick="azioneAttacca()">🗡 Attacca</button>
-        <button onclick="azioneAbilita()" ${p.mana < 5 ? "disabled" : ""}>
-          ✨ ${CLASSI[p.classe].abilita} (5 mana)</button>
-        <button onclick="azionePozione()" ${pozioni.length ? "" : "disabled"}>
-          🧪 Pozione (${pozioni.length})</button>
+        <button onclick="azioneAbilita()" ${p.mana < 5 ? "disabled" : ""}>✨ ${CLASSI[p.classe].abilita} (5)</button>
+        <button onclick="azionePozione()" ${pozioni.length ? "" : "disabled"}>🧪 Pozione (${pozioni.length})</button>
         <button onclick="azioneDifendi()">🛡 Difenditi</button>
         <button class="danger" onclick="azioneFuga()">🏃 Fuggi</button>
       </div>
     </div>
   `;
   renderLog();
+  // Applica gli effetti visivi accumulati nel turno.
+  if (fxEnemy) {
+    const s = document.getElementById("enemySprite");
+    if (s) { s.classList.add("lunge"); setTimeout(() => s && s.classList.remove("lunge"), 300); }
+  }
+  if (fxShake) {
+    const a = app(); a.classList.add("shake"); setTimeout(() => a.classList.remove("shake"), 300);
+  }
+  fxEnemy = fxShake = false;
 }
 
-function turnoNemico() {
+// Pipeline di un turno del giocatore (azione + reazione del nemico).
+function eseguiTurno(actionFn) {
+  const r = processoInizio(stato, "Tu");
+  r.msg.forEach(m => log(m.t, m.c));
+  if (stato.pv <= 0) return sconfitta();
+  if (r.stordito) { fxShake = true; }
+  else actionFn();
+  if (combattimento.pv <= 0) return vittoria();
+  faseNemico();
+}
+
+function faseNemico() {
   const n = combattimento, p = stato;
-  if (n.pv <= 0) return;
-  const base = n.attacco + rnd(-1, 2);
-  const danno = Math.max(1, base - difesaTotale(p));
-  p.pv = Math.max(0, p.pv - danno);
-  log(`${n.nome} ti colpisce per ${danno} danni.`, "log-bad");
-}
-
-function recuperaMana() {
-  if (stato.mana < stato.manaMax) stato.mana = Math.min(stato.manaMax, stato.mana + 1);
-}
-
-function dopoTurno() {
-  if (combattimento.pv <= 0) { vittoria(); return; }
-  turnoNemico();
-  recuperaMana();
-  if (stato.pv <= 0) { sconfitta(); return; }
+  const r = processoInizio(n, n.nome);
+  r.msg.forEach(m => log(m.t, m.c));
+  if (n.pv <= 0) return vittoria();
+  if (!r.stordito) {
+    let def = difesaTotale(p);
+    if (p._guardia) def += Math.max(3, p.difesa);
+    const base = n.attacco + rnd(-1, 2);
+    const danno = Math.max(1, base - def);
+    p.pv = Math.max(0, p.pv - danno);
+    log(`${n.nome} ti colpisce per ${danno} danni.`, "log-bad");
+    fxShake = true; sfx("hurt");
+    if (n.inflitto && Math.random() < n.inflitto.prob) {
+      applica(p, n.inflitto.tipo, n.inflitto.turni, n.inflitto.valore);
+      log(`${n.nome} ti infligge ${NOMI_EFFETTO[n.inflitto.tipo]}!`, "log-bad");
+    }
+  }
+  p._guardia = false;
+  if (p.mana < p.manaMax) p.mana = Math.min(p.manaMax, p.mana + 1);
+  if (p.pv <= 0) return sconfitta();
   schermataCombattimento();
 }
 
 function azioneAttacca() {
-  const p = stato, n = combattimento;
-  const critico = p.classe === "Ladro" && Math.random() < 0.25;
-  let base = attaccoTotale(p) + rnd(0, 3);
-  if (critico) base = Math.floor(base * 1.8);
-  const danno = Math.max(1, base - n.difesa);
-  n.pv = Math.max(0, n.pv - danno);
-  if (critico) log(`COLPO CRITICO! Infliggi ${danno} danni.`, "log-crit");
-  else log(`Attacchi ${n.nome} per ${danno} danni.`);
-  dopoTurno();
+  eseguiTurno(() => {
+    const p = stato, n = combattimento;
+    const crit = p.classe === "Ladro" && Math.random() < 0.25;
+    let base = attaccoTotale(p) + rnd(0, 3);
+    if (crit) base = Math.floor(base * 1.8);
+    const danno = Math.max(1, base - n.difesa);
+    n.pv = Math.max(0, n.pv - danno);
+    if (crit) { log(`COLPO CRITICO! Infliggi ${danno} danni.`, "log-crit"); sfx("crit"); }
+    else { log(`Attacchi ${n.nome} per ${danno} danni.`); sfx("hit"); }
+    fxEnemy = true;
+    if (p.classe === "Ladro") { applica(n, "veleno", 2, 2); }
+  });
 }
 
 function azioneAbilita() {
-  const p = stato, n = combattimento;
-  if (p.mana < 5) return;
-  p.mana -= 5;
-  const base = Math.floor(attaccoTotale(p) * CLASSI[p.classe].moltAbilita) + rnd(0, 4);
-  const danno = Math.max(1, base - n.difesa);
-  n.pv = Math.max(0, n.pv - danno);
-  log(`Usi ${CLASSI[p.classe].abilita} e infliggi ${danno} danni!`, "log-crit");
-  dopoTurno();
+  eseguiTurno(() => {
+    const p = stato, n = combattimento;
+    if (p.mana < 5) { log("Mana insufficiente!", "log-bad"); return; }
+    p.mana -= 5;
+    const base = Math.floor(attaccoTotale(p) * CLASSI[p.classe].moltAbilita) + rnd(0, 4);
+    const danno = Math.max(1, base - n.difesa);
+    n.pv = Math.max(0, n.pv - danno);
+    log(`Usi ${CLASSI[p.classe].abilita} e infliggi ${danno} danni!`, "log-crit");
+    sfx("magic"); fxEnemy = true;
+    if (p.classe === "Guerriero" && Math.random() < 0.45) {
+      applica(n, "stordito", 1, 0); log(`${n.nome} è stordito!`, "log-sys");
+    } else if (p.classe === "Mago") {
+      applica(n, "veleno", 3, 3); log(`${n.nome} prende fuoco!`, "log-sys");
+    } else if (p.classe === "Ladro") {
+      applica(n, "veleno", 3, 3);
+    }
+  });
 }
 
 function azionePozione() {
-  const p = stato;
-  const idx = p.inventario.findIndex(k => ITEMS[k].tipo === "pozione");
-  if (idx === -1) return;
-  const it = ITEMS[p.inventario[idx]];
-  const prima = p.pv;
-  p.pv = Math.min(p.pvMax, p.pv + it.cura);
-  log(`Bevi ${it.nome} e recuperi ${p.pv - prima} PV.`, "log-good");
-  p.inventario.splice(idx, 1);
-  dopoTurno();
+  eseguiTurno(() => {
+    const p = stato;
+    const idx = p.inventario.findIndex(k => ITEMS[k].tipo === "pozione");
+    if (idx === -1) { log("Niente pozioni!", "log-bad"); return; }
+    const it = ITEMS[p.inventario[idx]]; const before = p.pv;
+    p.pv = Math.min(p.pvMax, p.pv + it.cura);
+    log(`Bevi ${it.nome} (+${p.pv - before} PV).`, "log-good"); sfx("heal");
+    p.inventario.splice(idx, 1);
+  });
 }
 
 function azioneDifendi() {
-  const p = stato, n = combattimento;
-  log("Ti metti in guardia, pronto a parare.");
-  const orig = p.difesa;
-  p.difesa += Math.max(3, p.difesa);
-  turnoNemico();
-  p.difesa = orig;
-  recuperaMana();
-  if (p.pv <= 0) { sconfitta(); return; }
-  schermataCombattimento();
+  eseguiTurno(() => { stato._guardia = true; log("Ti metti in guardia, pronto a parare."); });
 }
 
 function azioneFuga() {
   const n = combattimento;
-  if (n.pvMax >= 60) {
+  if (n.pvMax >= 70) {
     log(`${n.nome} ti blocca la via! Non puoi fuggire.`, "log-bad");
-    turnoNemico();
-    recuperaMana();
-    if (stato.pv <= 0) { sconfitta(); return; }
-    schermataCombattimento();
-    return;
+    faseNemico(); return;
   }
-  log("Ti ritiri dal combattimento.", "log-sys");
-  // Torna alla prima uscita disponibile.
-  const uscite = Object.values(MONDO[stato.stanza].uscite);
-  if (uscite.length) stato.stanza = uscite[0];
-  combattimento = null;
-  entraStanza();
+  if (Math.random() < 0.6) {
+    log("Riesci a fuggire!", "log-sys");
+    const uscite = Object.values(MONDO[stato.stanza].uscite);
+    if (uscite.length) stato.stanza = uscite[0];
+    combattimento = null; entraStanza();
+  } else {
+    log("La fuga fallisce!", "log-bad"); faseNemico();
+  }
 }
 
 function vittoria() {
   const p = stato, n = combattimento;
+  const boss = MONDO[p.stanza].boss;
   log(`Hai sconfitto ${n.nome}!`, "log-good");
   guadagnaXP(n.xp);
   const oro = Math.max(1, Math.floor(n.xp / 2));
-  p.oro += oro;
+  p.oro += oro; sfx("coin");
   log(`Raccogli ${oro} monete d'oro.`, "log-good");
-  if (n.drop) {
-    p.inventario.push(n.drop);
-    log(`${n.nome} lascia: ${descBreve(ITEMS[n.drop])}!`, "log-good");
-  }
-  const boss = MONDO[p.stanza].boss;
+  if (n.drop) { p.inventario.push(n.drop); log(`${n.nome} lascia: ${descBreve(ITEMS[n.drop])}!`, "log-good"); }
+  p.effetti = [];
   combattimento = null;
   raccogliBottino();
   if (boss) { vittoriaFinale(); return; }
@@ -523,24 +659,28 @@ function guadagnaXP(q) {
   log(`Guadagni ${q} punti esperienza.`);
   p.xp += q;
   while (p.xp >= p.xpProssimo) {
-    p.xp -= p.xpProssimo;
-    p.livello += 1;
-    p.xpProssimo = Math.floor(p.xpProssimo * 1.5);
+    p.xp -= p.xpProssimo; p.livello += 1; p.xpProssimo = Math.floor(p.xpProssimo * 1.5);
     p.pvMax += 6; p.manaMax += 3; p.attacco += 2; p.difesa += 1;
     p.pv = p.pvMax; p.mana = p.manaMax;
     log(`★ LIVELLO ${p.livello}! PV+6, Mana+3, ATK+2, DIF+1. Recupero completo.`, "log-crit");
+    sfx("level");
   }
 }
 
 function vittoriaFinale() {
+  schermataAttuale = vittoriaFinale;
+  stato.quest.principale = "completata";
+  sfx("victory");
   app().innerHTML = `
-    <h1 class="title">🏆 VITTORIA! 🏆</h1>
+    <h1 class="title pop">🏆 VITTORIA! 🏆</h1>
     <div class="panel">
+      <div class="sprite pop">🐉💥</div>
       <p class="room-desc">Hai abbattuto il Drago Antico, ${stato.nome}!
-      La cripta è liberata. Il tuo nome diventa leggenda.</p>
+      La cripta è liberata e il tuo nome diventa leggenda.</p>
       <div class="stats">
         <div>Livello finale: <span>${stato.livello}</span></div>
         <div>Oro raccolto: <span>${stato.oro}</span></div>
+        <div>Missioni completate: <span>${Object.values(stato.quest).filter(s => s === "completata").length}/3</span></div>
       </div>
       <button class="primary" style="margin-top:14px" onclick="nuovaDaCapo()">Gioca di nuovo</button>
     </div>
@@ -549,9 +689,12 @@ function vittoriaFinale() {
 }
 
 function sconfitta() {
+  schermataAttuale = sconfitta;
+  sfx("defeat");
   app().innerHTML = `
     <h1 class="title" style="color:var(--bad)">☠ SEI MORTO ☠</h1>
     <div class="panel">
+      <div class="sprite">💀</div>
       <p class="room-desc">La tua avventura finisce qui... Le tue ossa si aggiungono
       a quelle della cripta.</p>
       <button class="primary" onclick="nuovaDaCapo()">Riprova</button>
@@ -560,21 +703,175 @@ function sconfitta() {
   localStorage.removeItem(SAVE_KEY);
 }
 
-function nuovaDaCapo() {
-  // Ripristina lo stato runtime del mondo (bottino consumato in memoria).
-  location.reload();
+function nuovaDaCapo() { location.reload(); }
+
+// ============================================================
+//  NPC, DIALOGHI E MISSIONI
+// ============================================================
+function interagisciNpc() {
+  const npc = MONDO[stato.stanza].npc;
+  if (npc === "anziano") parlaAnziano();
+  else if (npc === "mercante") apriMercante();
+  else if (npc === "prigioniero") parlaPrigioniero();
+  else if (npc === "altare") usaAltare();
+}
+
+function schermataDialogo(emoji, titolo, righe, azioni) {
+  // righe: array di stringhe; azioni: array di {label, fn, cls}
+  app().innerHTML = `
+    <div class="panel">
+      <div class="sprite">${emoji}</div>
+      <h2 class="room-name">${titolo}</h2>
+      ${righe.map(r => `<p class="room-desc">${r}</p>`).join("")}
+      <div id="dlgAzioni"></div>
+    </div>
+  `;
+  const cont = document.getElementById("dlgAzioni");
+  azioni.forEach(a => {
+    const b = document.createElement("button");
+    if (a.cls) b.className = a.cls;
+    b.textContent = a.label;
+    b.onclick = a.fn;
+    cont.appendChild(b);
+  });
+}
+
+function parlaAnziano() {
+  schermataAttuale = parlaAnziano;
+  const righe = [];
+  if (stato.quest.principale === "non_iniziata") {
+    stato.quest.principale = "attiva";
+    righe.push("«Ascolta, eroe. In fondo a questa cripta dorme il Drago Antico. Solo abbattendolo libererai queste terre.»");
+    righe.push("<i>Nuova missione: L'Ombra del Drago.</i>");
+  } else if (stato.quest.principale === "completata") {
+    righe.push("«Hai sconfitto il drago! Sei una leggenda vivente.»");
+  } else {
+    righe.push("«Il drago ti attende a nord, oltre la cripta. Preparati bene: cerca un mercante e armati.»");
+  }
+  schermataDialogo("🧙‍♂️", "L'Anziano", righe, [{ label: "← Torna indietro", fn: schermataEsplorazione }]);
+}
+
+function parlaPrigioniero() {
+  schermataAttuale = parlaPrigioniero;
+  if (stato.quest.prigioniero !== "completata") {
+    stato.quest.prigioniero = "completata";
+    stato.oro += 50;
+    stato.inventario.push("lama");
+    sfx("coin");
+    schermataDialogo("🧎", "Il Prigioniero", [
+      "«Grazie, mi hai liberato! Ero un cacciatore di draghi... prendi la mia Lama del Cacciatore.»",
+      "<i>Missione completata: Il Prigioniero. Ricevi 50 oro e la Lama del Cacciatore (+6 ATK).</i>",
+      "«Un consiglio: il drago è vulnerabile al fuoco e ai veleni persistenti.»",
+    ], [{ label: "← Torna indietro", fn: schermataEsplorazione }]);
+  } else {
+    schermataDialogo("🧎", "Il Prigioniero", [
+      "«Ti devo la vita. Abbatti quel drago per entrambi!»",
+    ], [{ label: "← Torna indietro", fn: schermataEsplorazione }]);
+  }
+}
+
+function usaAltare() {
+  schermataAttuale = usaAltare;
+  const before = stato.pv + stato.mana;
+  stato.pv = stato.pvMax; stato.mana = stato.manaMax; stato.effetti = [];
+  sfx("heal");
+  schermataDialogo("✨", "Santuario", [
+    before < stato.pvMax + stato.manaMax
+      ? "Una luce calda ti avvolge. PV e Mana ripristinati al massimo, effetti negativi rimossi."
+      : "Riposi all'altare. Sei già in piena forma.",
+  ], [{ label: "← Torna indietro", fn: schermataEsplorazione }]);
+}
+
+function apriMercante() {
+  schermataAttuale = apriMercante;
+  const p = stato;
+  if (p.quest.amuleto === "non_iniziata") {
+    p.quest.amuleto = "attiva";
+    log("Nuova missione: L'Amuleto del Mercante.", "log-sys");
+  }
+  const inVendita = ["pozMinore", "pozMaggiore", "antidoto", "spada", "pugnale", "ascia", "cuoio", "maglia", "mantello"];
+  const haAmuleto = p.inventario.includes("amuleto");
+
+  app().innerHTML = `
+    ${barreGiocatore()}
+    <div class="panel">
+      <div class="sprite">🧝</div>
+      <h2 class="room-name">Il Mercante</h2>
+      <p class="room-desc">«Benvenuto, viaggiatore! Compra, vendi... e se trovi il mio
+      Amuleto Perduto nella stanza segreta, sarò molto generoso.»</p>
+      ${haAmuleto && p.quest.amuleto === "attiva"
+        ? `<button class="primary" onclick="consegnaAmuleto()">🎁 Consegna l'Amuleto Perduto</button>` : ""}
+      <h3 style="color:var(--accent)">Acquista</h3>
+      <div id="shopBuy"></div>
+      <h3 style="color:var(--accent); margin-top:10px">Vendi (metà prezzo)</h3>
+      <div id="shopSell"></div>
+      <button style="margin-top:12px" onclick="schermataEsplorazione()">← Esci dal mercato</button>
+    </div>
+  `;
+  const buy = document.getElementById("shopBuy");
+  inVendita.forEach(k => {
+    const it = ITEMS[k]; const prezzo = it.valore;
+    const row = document.createElement("div");
+    row.className = "item-row";
+    row.innerHTML = `<span>${descBreve(it)} — <span class="oro">🪙 ${prezzo}</span></span>`;
+    const b = document.createElement("button");
+    b.className = "small"; b.textContent = "Compra";
+    b.disabled = p.oro < prezzo;
+    b.onclick = () => { p.oro -= prezzo; p.inventario.push(k); sfx("coin"); apriMercante(); };
+    row.appendChild(b);
+    buy.appendChild(row);
+  });
+  const sell = document.getElementById("shopSell");
+  const vendibili = p.inventario.filter(k => ITEMS[k].tipo !== "tesoro");
+  if (!vendibili.length) {
+    sell.innerHTML = `<p class="room-desc">Non hai nulla da vendere.</p>`;
+  } else {
+    p.inventario.forEach((k, i) => {
+      const it = ITEMS[k];
+      if (it.tipo === "tesoro") return;
+      const prezzo = Math.floor(it.valore / 2);
+      const row = document.createElement("div");
+      row.className = "item-row";
+      row.innerHTML = `<span>${descBreve(it)} — <span class="oro">🪙 ${prezzo}</span></span>`;
+      const b = document.createElement("button");
+      b.className = "small"; b.textContent = "Vendi";
+      b.onclick = () => {
+        p.oro += prezzo;
+        if (p.arma === k) p.arma = null;
+        if (p.armatura === k) p.armatura = null;
+        p.inventario.splice(i, 1); sfx("coin"); apriMercante();
+      };
+      row.appendChild(b);
+      sell.appendChild(row);
+    });
+  }
+}
+
+function consegnaAmuleto() {
+  const p = stato;
+  const idx = p.inventario.indexOf("amuleto");
+  if (idx === -1) return;
+  p.inventario.splice(idx, 1);
+  p.quest.amuleto = "completata";
+  p.oro += 70;
+  p.inventario.push("mantello");
+  sfx("coin");
+  schermataDialogo("🧝", "Il Mercante", [
+    "«Il mio amuleto! Te ne sarò eternamente grato. Prendi questo Mantello Arcano e dell'oro.»",
+    "<i>Missione completata: L'Amuleto del Mercante. Ricevi 70 oro e il Mantello Arcano (+5 DIF).</i>",
+  ], [{ label: "← Torna indietro", fn: schermataEsplorazione }]);
 }
 
 // ============================================================
-//  PERSONAGGIO E INVENTARIO
+//  PERSONAGGIO, INVENTARIO, DIARIO
 // ============================================================
-
 function schermataPersonaggio() {
+  schermataAttuale = schermataPersonaggio;
   const p = stato;
   app().innerHTML = `
     ${barreGiocatore()}
     <div class="panel">
-      <h2 class="room-name">${p.nome} — ${p.classe} Lv.${p.livello}</h2>
+      <h2 class="room-name">${CLASSI[p.classe].emoji} ${p.nome} — ${p.classe} Lv.${p.livello}</h2>
       <div class="stats" style="margin-top:10px">
         <div>XP: <span>${p.xp}/${p.xpProssimo}</span></div>
         <div>Oro: <span>${p.oro}</span></div>
@@ -585,7 +882,7 @@ function schermataPersonaggio() {
       </div>
       <div class="bar-wrap" style="margin-top:10px">
         <div class="bar-label"><span>Progresso livello</span><span>${p.xp}/${p.xpProssimo}</span></div>
-        <div class="bar xp"><div style="width:${100*p.xp/p.xpProssimo}%"></div></div>
+        <div class="bar xp"><div style="width:${100 * p.xp / p.xpProssimo}%"></div></div>
       </div>
       <button style="margin-top:12px" onclick="schermataEsplorazione()">← Indietro</button>
     </div>
@@ -593,6 +890,7 @@ function schermataPersonaggio() {
 }
 
 function schermataInventario() {
+  schermataAttuale = schermataInventario;
   const p = stato;
   app().innerHTML = `
     ${barreGiocatore()}
@@ -603,28 +901,28 @@ function schermataInventario() {
     </div>
   `;
   const inv = document.getElementById("inv");
-  if (!p.inventario.length) {
-    inv.innerHTML = `<p class="room-desc">Il tuo inventario è vuoto.</p>`;
-    return;
-  }
+  if (!p.inventario.length) { inv.innerHTML = `<p class="room-desc">Il tuo inventario è vuoto.</p>`; return; }
   p.inventario.forEach((k, i) => {
     const it = ITEMS[k];
     const row = document.createElement("div");
     row.className = "item-row";
+    const equipaggiato = (p.arma === k || p.armatura === k);
     let azione = "";
-    if (it.tipo === "pozione") azione = `<button onclick="usaPozioneInv(${i})">Bevi</button>`;
+    if (it.tipo === "pozione") azione = `<button class="small" onclick="usaPozioneInv(${i})">Bevi</button>`;
     else if (it.tipo === "arma" || it.tipo === "armatura")
-      azione = `<button onclick="equipaggiaInv(${i})">Equipaggia</button>`;
-    row.innerHTML = `<span>${descBreve(it)} <span class="tag">${it.tipo}</span></span>${azione}`;
+      azione = `<button class="small" onclick="equipaggiaInv(${i})">Equipaggia</button>`;
+    row.innerHTML = `<span>${descBreve(it)} <span class="tag">${it.tipo}</span>
+      ${equipaggiato ? '<span class="equipped">✔ equipaggiato</span>' : ""}</span>${azione}`;
     inv.appendChild(row);
   });
 }
 
 function usaPozioneInv(i) {
   const p = stato, it = ITEMS[p.inventario[i]];
-  const prima = p.pv;
+  if (p.pv >= p.pvMax) { log("Sei già al massimo dei PV.", "log-sys"); }
+  const before = p.pv;
   p.pv = Math.min(p.pvMax, p.pv + it.cura);
-  log(`Bevi ${it.nome} e recuperi ${p.pv - prima} PV.`, "log-good");
+  log(`Bevi ${it.nome} e recuperi ${p.pv - before} PV.`, "log-good"); sfx("heal");
   p.inventario.splice(i, 1);
   schermataInventario();
 }
@@ -643,34 +941,53 @@ function equipaggiaInv(i) {
   schermataInventario();
 }
 
+function schermataDiario() {
+  schermataAttuale = schermataDiario;
+  const etichetta = { non_iniziata: "Non iniziata", attiva: "In corso", completata: "Completata" };
+  const colore = { non_iniziata: "var(--muted)", attiva: "var(--accent)", completata: "var(--good)" };
+  let righe = "";
+  for (const k in QUESTS) {
+    const stat = stato.quest[k];
+    if (stat === "non_iniziata") continue; // mostra solo missioni scoperte
+    righe += `<div class="panel" style="margin-bottom:8px">
+      <b style="color:var(--accent)">${QUESTS[k].nome}</b>
+      <span class="tag" style="color:${colore[stat]}">${etichetta[stat]}</span>
+      <p class="room-desc" style="margin:6px 0 0">${QUESTS[k].obiettivo}</p></div>`;
+  }
+  if (!righe) righe = `<p class="room-desc">Nessuna missione attiva. Esplora e parla con gli NPC.</p>`;
+  app().innerHTML = `
+    <div class="panel">
+      <h2 class="room-name">📖 Diario delle Missioni</h2>
+      ${righe}
+      <button onclick="schermataEsplorazione()">← Indietro</button>
+    </div>
+  `;
+}
+
 // ============================================================
 //  SALVATAGGIO
 // ============================================================
-
 function salvaPartita() {
   localStorage.setItem(SAVE_KEY, JSON.stringify(stato));
   log("Partita salvata nel browser.", "log-sys");
   schermataEsplorazione();
 }
-
 function caricaPartita() {
   const dati = localStorage.getItem(SAVE_KEY);
   if (!dati) { schermataMenu(); return; }
   try {
     stato = JSON.parse(dati);
+    // Compatibilità: campi eventualmente assenti.
+    stato.effetti = stato.effetti || [];
+    stato.visitate = stato.visitate || {};
+    stato.quest = stato.quest || { principale: "non_iniziata", amuleto: "non_iniziata", prigioniero: "non_iniziata" };
     logBuffer = [];
     log(`Bentornato, ${stato.nome}!`, "log-sys");
-    // Ricostruisci lo stato delle stanze ripulite nel mondo in memoria.
     entraStanza();
-  } catch (e) {
-    schermataMenu();
-  }
+  } catch (e) { schermataMenu(); }
 }
-
 function abbandona() {
-  if (confirm("Tornare al menu? Salva prima se non vuoi perdere i progressi.")) {
-    schermataMenu();
-  }
+  if (confirm("Tornare al menu? Salva prima se non vuoi perdere i progressi.")) schermataMenu();
 }
 
 // Avvio.

@@ -4,8 +4,23 @@ Un gioco di ruolo (RPG) a turni nel mondo della Cripta del Drago. Disponibile in
 **due versioni** con le stesse meccaniche:
 
 - 🌐 **Versione browser** (`index.html`) — nessuna installazione, si apre con un
-  doppio clic o da un link. **Consigliata.**
+  doppio clic o da un link. **Consigliata e più completa.**
 - 💻 **Versione terminale** (Python) — per chi preferisce la riga di comando.
+
+## ✨ Cosa offre la versione browser
+
+- **3 classi** giocabili (Guerriero, Mago, Ladro) con abilità diverse.
+- **Combattimento a turni** con attacchi, abilità speciali, pozioni, difesa e fuga.
+- **Effetti di stato**: veleno/bruciatura, stordimento, rigenerazione, forza —
+  per te e per i nemici. Ogni classe applica effetti diversi con la sua abilità.
+- **Mappa a 13 stanze** con bivi e una stanza segreta, e **mini-mappa** che si
+  rivela mentre esplori.
+- **8 tipi di nemici** più il Drago Antico come boss finale.
+- **Mercante** dove comprare e vendere oggetti con l'oro.
+- **NPC con dialoghi** e **3 missioni** (una principale e due secondarie con
+  ricompense), con un **diario** che ne traccia lo stato.
+- **Animazioni** (colpi, schermo che trema), **effetti sonori** generati dal
+  browser (attivabili/disattivabili) e **salvataggio** nel browser.
 
 ## 🌐 Versione browser (consigliata)
 
