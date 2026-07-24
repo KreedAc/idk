@@ -196,11 +196,10 @@ Un PC in **sospensione è spento** per la rete: HomeCloud non risponderebbe.
   (quando collegato alla corrente).
 - Lo **schermo** invece può spegnersi liberamente: non consuma il server.
 
-### 6c. (Facoltativo) Accensione da remoto
+### 6c. Accensione dei PC da remoto
 
-Se non vuoi tenere il PC sempre acceso, cerca nel BIOS l'opzione
-**Wake-on-LAN**: permette di accendere il PC da remoto. È un capitolo a parte,
-tienilo per dopo.
+HomeCloud ha un'app apposta ("🔌 Dispositivi") per accendere gli altri PC da
+remoto: la configuriamo al Capitolo 9.
 
 ---
 
@@ -257,6 +256,95 @@ ogni modifica):
   ]
   ```
 - **Porta diversa** (se la 8080 fosse occupata): `"port": 8090`.
+
+---
+
+## Capitolo 9 — L'architettura "centralina": Raspberry sempre acceso, PC al bisogno
+
+**Cosa fa:** è il piano definitivo. Il Raspberry (che consuma ~5 watt, pochi
+euro di corrente **all'anno**) resta sempre acceso e fa da centralina: storage,
+file, terminale, e soprattutto **l'interruttore per accendere i PC grossi da
+remoto**. I PC potenti stanno spenti finché non ti servono davvero.
+
+### 9a. HomeCloud sul Raspberry
+
+Sul Raspberry (con Raspberry Pi OS) apri il terminale e installa Node.js:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs git
+```
+
+Poi identico al Capitolo 2–3:
+
+```bash
+git clone -b claude/slot-machine-project-a63egq https://github.com/KreedAc/idk.git ~/homecloud
+cd ~/homecloud && npm install && npm start
+```
+
+**Consigli da centralina:**
+- Attacca un **SSD/hard disk USB** e punta lì lo storage in `config.json`
+  (`"storageDir": "/mnt/disco/storage"`): le schede SD sono lente e si
+  consumano.
+- Per l'avvio automatico sul Raspberry: `crontab -e` e aggiungi la riga
+  `@reboot cd /home/pi/homecloud && npm start`.
+- Installa Tailscale anche sul Raspberry:
+  `curl -fsSL https://tailscale.com/install.sh | sh` poi `sudo tailscale up`.
+
+### 9b. Preparare i PC all'accensione remota (Wake-on-LAN)
+
+Il **Wake-on-LAN** funziona così: la scheda di rete di un PC spento (ma
+collegato alla corrente e al **cavo ethernet**) resta in ascolto con un filo
+di energia. Se riceve un pacchetto speciale — il "magic packet", che contiene
+il suo MAC address ripetuto 16 volte — accende il PC. È come un campanello
+che suona solo con la tua impronta digitale.
+
+Su ogni PC che vuoi accendere da remoto (una volta sola):
+
+1. **Nel BIOS/UEFI** (premi Canc o F2 all'accensione): cerca *Wake on LAN*,
+   *Power On by PCI-E* o simili, e **abilitalo**.
+2. **In Windows**: Gestione dispositivi → la tua scheda di rete → Proprietà →
+   Risparmio energia → spunta "Consenti al dispositivo di riattivare il
+   computer" e "Solo Magic Packet". Poi in Pannello di controllo →
+   Alimentazione → disattiva l'**Avvio rapido** (tiene la scheda di rete in
+   uno stato che ignora il WoL).
+3. **Trova il MAC address**: prompt dei comandi → `ipconfig /all` → voce
+   "Indirizzo fisico" della scheda ethernet, tipo `A1-B2-C3-D4-E5-F6`.
+4. **Trova l'IP** e rendilo fisso: sempre in `ipconfig` vedi l'IPv4
+   (es. `192.168.1.42`). Nelle impostazioni del router assegna a quel PC un
+   IP **riservato/statico**, così non cambia mai.
+
+> ⚠️ Il WoL funziona **via cavo ethernet**, quasi mai in WiFi. E il magic
+> packet viaggia solo **dentro la rete di casa** — ma è proprio per questo che
+> serve la centralina: da fuori tu (via Tailscale) parli col Raspberry, e il
+> Raspberry, che è in casa, "suona il campanello" al PC.
+
+### 9c. Configurare i dispositivi in HomeCloud
+
+Nel `config.json` **del Raspberry**:
+
+```json
+"devices": [
+  { "name": "PC Studio", "mac": "A1:B2:C3:D4:E5:F6", "host": "192.168.1.42" },
+  { "name": "PC Salotto", "mac": "11:22:33:44:55:66", "host": "192.168.1.43" }
+]
+```
+
+- `host` serve a mostrare il pallino verde/rosso (acceso/spento);
+- `mac` serve per il pulsante "🔌 Accendi".
+
+Riavvia HomeCloud e apri l'app **🔌 Dispositivi**: vedi lo stato di ogni PC e
+li accendi con un clic. Il flusso completo da fuori casa diventa:
+
+```
+telefono (ovunque) ──Tailscale──▶ Raspberry (sempre acceso)
+                                      │  magic packet
+                                      ▼
+                              PC potente si accende
+                                      │  1-2 minuti dopo
+                                      ▼
+                     desktop remoto / programmi pesanti
+```
 
 ---
 

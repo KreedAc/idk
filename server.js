@@ -8,6 +8,8 @@ const multer = require('multer');
 const { WebSocketServer } = require('ws');
 const { spawn } = require('child_process');
 const crypto = require('crypto');
+const dgram = require('dgram');
+const net = require('net');
 const fs = require('fs');
 const fsp = require('fs/promises');
 const http = require('http');
@@ -30,7 +32,10 @@ if (fs.existsSync(CONFIG_PATH)) {
     // URL del client noVNC per il desktop remoto, es. "http://localhost:6080/vnc.html"
     remoteDesktopUrl: '',
     // Programmi avviabili dalla UI, es. { "name": "Blocco note", "command": "notepad.exe" }
-    launcherApps: []
+    launcherApps: [],
+    // Altri dispositivi della rete, accendibili via Wake-on-LAN,
+    // es. { "name": "PC Studio", "mac": "AA:BB:CC:DD:EE:FF", "host": "192.168.1.42" }
+    devices: []
   };
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
   console.log('==============================================');
@@ -261,6 +266,88 @@ app.post('/api/apps/run', (req, res) => {
     res.json({ ok: true, name: entry.name });
   } catch (e) {
     res.status(500).json({ error: `Avvio fallito: ${e.message}` });
+  }
+});
+
+// --- Dispositivi: stato e accensione via Wake-on-LAN -------------------------
+// Il "magic packet" WoL è un pacchetto UDP con 6 byte 0xFF seguiti dal MAC
+// address del PC ripetuto 16 volte: la scheda di rete lo riconosce anche a
+// PC spento e avvia l'accensione.
+function sendWakeOnLan(mac, broadcast = '255.255.255.255') {
+  const clean = String(mac).replace(/[^0-9a-fA-F]/g, '');
+  if (clean.length !== 12) return Promise.reject(new Error('MAC address non valido'));
+  const macBuf = Buffer.from(clean, 'hex');
+  const packet = Buffer.concat([Buffer.alloc(6, 0xff), ...Array(16).fill(macBuf)]);
+  return new Promise((resolve, reject) => {
+    const socket = dgram.createSocket('udp4');
+    socket.on('error', (e) => {
+      socket.close();
+      reject(e);
+    });
+    socket.bind(() => {
+      socket.setBroadcast(true);
+      socket.send(packet, 9, broadcast, (err) => {
+        socket.close();
+        err ? reject(err) : resolve();
+      });
+    });
+  });
+}
+
+// Un host è "acceso" se risponde al ping, oppure — se ping non è disponibile —
+// se risponde a una sonda TCP (anche un rifiuto di connessione è una risposta).
+function tcpProbe(host, port) {
+  return new Promise((resolve) => {
+    const sock = net.connect({ host, port, timeout: 1200 });
+    const done = (up) => {
+      sock.destroy();
+      resolve(up);
+    };
+    sock.on('connect', () => done(true));
+    sock.on('error', (e) => done(e.code === 'ECONNREFUSED'));
+    sock.on('timeout', () => done(false));
+  });
+}
+
+function pingHost(host) {
+  return new Promise((resolve) => {
+    const isWin = process.platform === 'win32';
+    const p = spawn('ping', isWin ? ['-n', '1', '-w', '1200', host] : ['-c', '1', '-W', '1', host]);
+    p.on('exit', (code) => resolve(code === 0 ? true : null));
+    p.on('error', () => resolve(null)); // ping non disponibile
+  });
+}
+
+async function hostOnline(host) {
+  if (!host) return null;
+  const ping = await pingHost(host);
+  if (ping !== null) return ping;
+  const probes = await Promise.all([3389, 445, 22, 80, 8080].map((p) => tcpProbe(host, p)));
+  return probes.some(Boolean);
+}
+
+app.get('/api/devices', async (req, res) => {
+  const devices = await Promise.all(
+    (config.devices || []).map(async (d, i) => ({
+      id: i,
+      name: d.name,
+      host: d.host || '',
+      canWake: Boolean(d.mac),
+      online: await hostOnline(d.host)
+    }))
+  );
+  res.json({ devices });
+});
+
+app.post('/api/devices/wake', async (req, res) => {
+  const entry = (config.devices || [])[Number(req.body.id)];
+  if (!entry) return res.status(404).json({ error: 'Dispositivo non trovato' });
+  if (!entry.mac) return res.status(400).json({ error: 'MAC address non configurato' });
+  try {
+    await sendWakeOnLan(entry.mac, entry.broadcast);
+    res.json({ ok: true, name: entry.name });
+  } catch (e) {
+    res.status(500).json({ error: `Invio fallito: ${e.message}` });
   }
 });
 

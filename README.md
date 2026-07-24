@@ -20,6 +20,9 @@ telefono, tablet) con un'interfaccia in stile desktop Windows.
   riavvia il PC da remoto.
 - **🚀 Avvia programmi** — pulsanti per lanciare sul PC i programmi che
   configuri tu (es. Blocco note, un gioco, un backup).
+- **🔌 Dispositivi** — vedi quali PC di casa sono accesi e **accendili da
+  remoto** col Wake-on-LAN: ideale con un Raspberry sempre acceso come
+  centralina e i PC potenti spenti finché non servono (vedi GUIDA, cap. 9).
 - **🖥️ Desktop remoto** — lo schermo del PC in una finestra del browser
   (tramite VNC + noVNC, configurazione opzionale, vedi sotto).
 - **🔐 Accesso protetto** — login con password, sessioni con cookie, blocco dei
@@ -56,6 +59,9 @@ casualmente, stampata in console**: segnatela (o cambiala nel file). Poi apri
   "launcherApps": [
     { "name": "Blocco note", "command": "notepad.exe" },
     { "name": "Riavvia PC", "command": "shutdown /r /t 60" }
+  ],
+  "devices": [
+    { "name": "PC Studio", "mac": "A1:B2:C3:D4:E5:F6", "host": "192.168.1.42" }
   ]
 }
 ```
@@ -63,6 +69,8 @@ casualmente, stampata in console**: segnatela (o cambiala nel file). Poi apri
 - `storageDir` può puntare a qualsiasi disco/cartella (es. un hard disk grande
   dedicato allo storage).
 - `launcherApps` è l'elenco dei programmi avviabili dall'app "🚀 Avvia".
+- `devices` è l'elenco dei PC visibili nell'app "🔌 Dispositivi" (stato +
+  accensione Wake-on-LAN).
 - Dopo ogni modifica riavvia il server (`Ctrl+C` e di nuovo `npm start`).
 
 ## Accesso da fuori casa (consigliato: Tailscale)
@@ -144,6 +152,7 @@ e mettilo nella cartella Esecuzione automatica (`Win+R` → `shell:startup`).
 - [x] Anteprime di immagini, video, audio, PDF e testo nel file manager
 - [x] Terminale remoto nel browser
 - [x] Launcher di programmi configurabile
+- [x] Stato dei dispositivi e accensione da remoto (Wake-on-LAN)
 - [ ] Cartella sincronizzata automaticamente tra dispositivi (stile Dropbox)
 - [ ] Condivisione file con link temporanei
 - [ ] Più utenti con spazi separati

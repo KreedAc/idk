@@ -506,6 +506,84 @@ async function openLauncherApp() {
 }
 
 // ---------------------------------------------------------------------------
+// App: Dispositivi (stato + Wake-on-LAN)
+// ---------------------------------------------------------------------------
+function openDevicesApp() {
+  const created = createWindow({ appId: 'devices', title: '🔌 Dispositivi', width: 520, height: 420 });
+  if (!created) return;
+  const { body, win } = created;
+  body.innerHTML = `<div class="launcher-list">Ricerca dispositivi…</div><p class="launcher-msg"></p>`;
+  const list = $('.launcher-list', body);
+  const msg = $('.launcher-msg', body);
+  let closed = false;
+
+  async function refresh() {
+    let devices = [];
+    try {
+      devices = (await api('/api/devices')).devices;
+    } catch (err) {
+      list.innerHTML = `<p>Errore: ${esc(err.message)}</p>`;
+      return;
+    }
+    if (closed) return;
+
+    if (!devices.length) {
+      list.innerHTML = `
+        <div class="launcher-empty">
+          <h2>🔌 Nessun dispositivo configurato</h2>
+          <p>Aggiungi i PC della tua rete in <code>config.json</code>, campo
+          <code>devices</code>:</p>
+          <pre>"devices": [
+  {
+    "name": "PC Studio",
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "host": "192.168.1.42"
+  }
+]</pre>
+          <p><code>host</code> serve a mostrare se è acceso, <code>mac</code>
+          ad accenderlo col <b>Wake-on-LAN</b> (va abilitato nel BIOS del PC,
+          vedi la GUIDA). Poi riavvia HomeCloud.</p>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = '';
+    for (const d of devices) {
+      const row = document.createElement('div');
+      row.className = 'launcher-item';
+      const state = d.online === null ? '' : d.online ? 'online' : 'offline';
+      const stateText = d.online === null ? 'stato sconosciuto' : d.online ? 'acceso' : 'spento';
+      row.innerHTML = `
+        <span class="device-status ${state}" title="${stateText}"></span>
+        <span class="name">${esc(d.name)}<br><span class="device-host">${esc(d.host || 'host non impostato')}</span></span>
+        <span class="device-state-label">${stateText}</span>
+        ${d.canWake ? '<button>🔌 Accendi</button>' : ''}`;
+      $('button', row)?.addEventListener('click', async () => {
+        msg.textContent = '';
+        try {
+          await api('/api/devices/wake', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: d.id })
+          });
+          msg.textContent = `📡 Segnale di accensione inviato a "${d.name}" — dagli qualche istante`;
+        } catch (err) {
+          msg.textContent = `❌ ${err.message}`;
+        }
+      });
+      list.appendChild(row);
+    }
+  }
+
+  refresh();
+  const interval = setInterval(refresh, 8000);
+  win.onClose = () => {
+    closed = true;
+    clearInterval(interval);
+  };
+}
+
+// ---------------------------------------------------------------------------
 // App: Monitor di sistema
 // ---------------------------------------------------------------------------
 function openMonitorApp() {
@@ -627,6 +705,8 @@ function openInfoApp() {
         <li><b>📊 Monitor</b> — stato del PC in tempo reale (CPU, RAM, disco).</li>
         <li><b>⌨️ Terminale</b> — una shell vera sul PC di casa, dal browser.</li>
         <li><b>🚀 Avvia</b> — lancia i programmi configurati sul PC.</li>
+        <li><b>🔌 Dispositivi</b> — vedi quali PC di casa sono accesi e
+        accendili da remoto (Wake-on-LAN).</li>
         <li><b>🖥️ Desktop remoto</b> — lo schermo del PC in una finestra (via VNC/noVNC).</li>
       </ul>
       <p><b>Prossimi passi</b>: sincronizzazione automatica, condivisione file con link,
@@ -642,6 +722,7 @@ const apps = {
   monitor: openMonitorApp,
   terminal: openTerminalApp,
   launcher: openLauncherApp,
+  devices: openDevicesApp,
   remote: openRemoteApp,
   info: openInfoApp
 };
