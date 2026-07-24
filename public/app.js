@@ -242,6 +242,7 @@ function openFilesApp() {
           </td>`;
         tr.addEventListener('dblclick', () => {
           if (item.dir) load(itemPath);
+          else if (previewKind(item.name)) openPreview(itemPath, item.name);
           else window.open(`/api/download?path=${encodeURIComponent(itemPath)}`);
         });
         $('[data-act="download"]', tr)?.addEventListener('click', (e) => {
@@ -324,6 +325,184 @@ function openFilesApp() {
   });
 
   load('');
+}
+
+// ---------------------------------------------------------------------------
+// Anteprime file (immagini, video, audio, PDF, testo)
+// ---------------------------------------------------------------------------
+const PREVIEW_TYPES = {
+  image: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'],
+  video: ['mp4', 'webm', 'ogv', 'mov', 'm4v'],
+  audio: ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'],
+  pdf: ['pdf'],
+  text: ['txt', 'md', 'log', 'json', 'js', 'css', 'html', 'xml', 'csv', 'ini', 'cfg', 'conf', 'py', 'sh', 'bat', 'yml', 'yaml']
+};
+
+function previewKind(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  for (const [kind, exts] of Object.entries(PREVIEW_TYPES)) {
+    if (exts.includes(ext)) return kind;
+  }
+  return null;
+}
+
+async function openPreview(itemPath, name) {
+  const kind = previewKind(name);
+  const url = `/api/download?path=${encodeURIComponent(itemPath)}&inline=1`;
+  const created = createWindow({
+    appId: `preview:${itemPath}`,
+    title: `👁️ ${name}`,
+    width: kind === 'audio' ? 460 : 760,
+    height: kind === 'audio' ? 220 : 540,
+    noPad: kind !== 'text'
+  });
+  if (!created) return;
+  const { body } = created;
+
+  if (kind === 'image') {
+    body.innerHTML = `<img class="preview-media" src="${esc(url)}" alt="${esc(name)}">`;
+  } else if (kind === 'video') {
+    body.innerHTML = `<video class="preview-media" src="${esc(url)}" controls autoplay></video>`;
+  } else if (kind === 'audio') {
+    body.innerHTML = `<div class="preview-audio"><audio src="${esc(url)}" controls autoplay></audio></div>`;
+  } else if (kind === 'pdf') {
+    body.innerHTML = `<iframe class="preview-frame" src="${esc(url)}"></iframe>`;
+  } else {
+    body.innerHTML = `<div class="preview-text">Caricamento…</div>`;
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+      $('.preview-text', body).textContent = text.slice(0, 500000) || '(file vuoto)';
+    } catch (err) {
+      $('.preview-text', body).textContent = `Errore: ${err.message}`;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// App: Terminale
+// ---------------------------------------------------------------------------
+function openTerminalApp() {
+  const created = createWindow({ appId: 'terminal', title: '⌨️ Terminale', width: 720, height: 460, noPad: true });
+  if (!created) return;
+  const { body, win } = created;
+
+  body.innerHTML = `
+    <div class="term">
+      <div class="term-output"></div>
+      <div class="term-input-row">
+        <span class="term-prompt">❯</span>
+        <input class="term-input" spellcheck="false" autocomplete="off"
+               placeholder="Scrivi un comando e premi Invio (es. dir, ls, ipconfig)…">
+      </div>
+    </div>`;
+
+  const output = $('.term-output', body);
+  const input = $('.term-input', body);
+  const history = [];
+  let histIdx = -1;
+
+  const stripAnsi = (s) => s.replace(/\x1b\[[0-9;?]*[a-zA-Z]|\x1b\][^\x07]*\x07/g, '');
+
+  function append(text, cls) {
+    const span = document.createElement('span');
+    if (cls) span.className = cls;
+    span.textContent = text;
+    output.appendChild(span);
+    output.scrollTop = output.scrollHeight;
+  }
+
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const ws = new WebSocket(`${proto}://${location.host}/api/term`);
+
+  ws.addEventListener('message', (e) => {
+    try {
+      const { type, data } = JSON.parse(e.data);
+      if (type === 'output') append(stripAnsi(data));
+      else if (type === 'info') append(data + '\n\n', 'term-info');
+      else if (type === 'exit') append(`\n[shell terminata, codice ${data}]\n`, 'term-info');
+    } catch {}
+  });
+  ws.addEventListener('close', () => append('\n[connessione chiusa — riapri la finestra per una nuova shell]\n', 'term-info'));
+  ws.addEventListener('error', () => append('\n[errore di connessione]\n', 'term-info'));
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const cmd = input.value;
+      append(`❯ ${cmd}\n`, 'term-cmd');
+      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'input', data: cmd + '\n' }));
+      if (cmd.trim()) history.push(cmd);
+      histIdx = history.length;
+      input.value = '';
+    } else if (e.key === 'ArrowUp') {
+      if (histIdx > 0) input.value = history[--histIdx];
+      e.preventDefault();
+    } else if (e.key === 'ArrowDown') {
+      input.value = histIdx < history.length - 1 ? history[++histIdx] : ((histIdx = history.length), '');
+      e.preventDefault();
+    }
+  });
+
+  body.addEventListener('click', () => input.focus());
+  input.focus();
+  win.onClose = () => ws.close();
+}
+
+// ---------------------------------------------------------------------------
+// App: Avvia programmi
+// ---------------------------------------------------------------------------
+async function openLauncherApp() {
+  const created = createWindow({ appId: 'launcher', title: '🚀 Avvia programmi', width: 480, height: 400 });
+  if (!created) return;
+  const { body } = created;
+
+  let apps = [];
+  try {
+    apps = (await api('/api/apps')).apps;
+  } catch (err) {
+    body.innerHTML = `<p>Errore: ${esc(err.message)}</p>`;
+    return;
+  }
+
+  if (!apps.length) {
+    body.innerHTML = `
+      <div class="launcher-empty">
+        <h2>🚀 Nessun programma configurato</h2>
+        <p>Aggiungi i programmi che vuoi poter avviare da remoto in
+        <code>config.json</code>, campo <code>launcherApps</code>:</p>
+        <pre>"launcherApps": [
+  { "name": "Blocco note", "command": "notepad.exe" },
+  { "name": "Calcolatrice", "command": "calc.exe" },
+  { "name": "Riavvia PC", "command": "shutdown /r /t 60" }
+]</pre>
+        <p>Poi riavvia HomeCloud. I programmi partono <b>sul PC di casa</b>
+        (li vedi tramite la finestra Desktop remoto).</p>
+      </div>`;
+    return;
+  }
+
+  body.innerHTML = `<div class="launcher-list"></div><p class="launcher-msg"></p>`;
+  const list = $('.launcher-list', body);
+  const msg = $('.launcher-msg', body);
+  for (const app of apps) {
+    const row = document.createElement('div');
+    row.className = 'launcher-item';
+    row.innerHTML = `<span class="name">▶️ ${esc(app.name)}</span><button>Avvia</button>`;
+    $('button', row).addEventListener('click', async () => {
+      msg.textContent = '';
+      try {
+        await api('/api/apps/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: app.id })
+        });
+        msg.textContent = `✅ "${app.name}" avviato sul PC`;
+      } catch (err) {
+        msg.textContent = `❌ ${err.message}`;
+      }
+    });
+    list.appendChild(row);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -443,19 +622,29 @@ function openInfoApp() {
       <p>Il tuo PC di casa come cloud personale: storage e desktop remoto accessibili
       dal browser di qualunque dispositivo, con un'interfaccia in stile desktop.</p>
       <ul>
-        <li><b>📁 File</b> — carica, scarica e organizza i tuoi file sul PC di casa.</li>
+        <li><b>📁 File</b> — carica, scarica e organizza i tuoi file sul PC di casa,
+        con anteprima di foto, video, audio, PDF e testo.</li>
         <li><b>📊 Monitor</b> — stato del PC in tempo reale (CPU, RAM, disco).</li>
+        <li><b>⌨️ Terminale</b> — una shell vera sul PC di casa, dal browser.</li>
+        <li><b>🚀 Avvia</b> — lancia i programmi configurati sul PC.</li>
         <li><b>🖥️ Desktop remoto</b> — lo schermo del PC in una finestra (via VNC/noVNC).</li>
       </ul>
       <p><b>Prossimi passi</b>: sincronizzazione automatica, condivisione file con link,
-      app multiple, supporto "cloud phone".</p>
+      supporto "cloud phone".</p>
     </div>`;
 }
 
 // ---------------------------------------------------------------------------
 // Avvio app + menu start + orologio
 // ---------------------------------------------------------------------------
-const apps = { files: openFilesApp, monitor: openMonitorApp, remote: openRemoteApp, info: openInfoApp };
+const apps = {
+  files: openFilesApp,
+  monitor: openMonitorApp,
+  terminal: openTerminalApp,
+  launcher: openLauncherApp,
+  remote: openRemoteApp,
+  info: openInfoApp
+};
 
 document.querySelectorAll('[data-app]').forEach((btn) =>
   btn.addEventListener('click', () => {

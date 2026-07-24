@@ -187,6 +187,60 @@ body {
 .bar-fill.warn { background: #e6a23c; }
 .bar-fill.crit { background: #d94141; }
 
+/* ---------- App: Terminale ---------- */
+.term {
+  display: flex; flex-direction: column; height: 100%;
+  background: #0a0d12; font-family: "Cascadia Mono", Consolas, Menlo, monospace;
+}
+.term-output {
+  flex: 1; overflow-y: auto; padding: 10px 12px;
+  font-size: 13px; line-height: 1.45; white-space: pre-wrap; word-break: break-all;
+  color: #cfe3cf;
+}
+.term-output .term-cmd { color: #7fb4ff; }
+.term-output .term-info { color: var(--text-dim); font-style: italic; }
+.term-input-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-top: 1px solid var(--win-border); background: #0d1119;
+}
+.term-prompt { color: #6ee36e; font-size: 13px; }
+.term-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  color: #e8ecf3; font-family: inherit; font-size: 13px;
+}
+
+/* ---------- App: Avvia programmi ---------- */
+.launcher-list { display: flex; flex-direction: column; gap: 8px; }
+.launcher-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border: 1px solid var(--win-border); border-radius: 10px;
+  background: #171c26;
+}
+.launcher-item .name { flex: 1; font-size: 14px; }
+.launcher-item button {
+  padding: 7px 16px; border: none; border-radius: 7px;
+  background: var(--accent); color: white; font-size: 13px; cursor: pointer;
+}
+.launcher-item button:hover { filter: brightness(1.1); }
+.launcher-msg { margin-top: 10px; font-size: 13px; color: var(--text-dim); min-height: 1.2em; }
+.launcher-empty { line-height: 1.6; }
+.launcher-empty code { background: #0d1119; padding: 2px 6px; border-radius: 5px; font-size: 12px; }
+.launcher-empty pre {
+  background: #0d1119; padding: 10px; border-radius: 8px;
+  font-size: 12px; margin: 10px 0; overflow-x: auto;
+}
+
+/* ---------- Anteprime file ---------- */
+.preview-media {
+  width: 100%; height: 100%; object-fit: contain; background: #0a0d12; display: block;
+}
+.preview-frame { width: 100%; height: 100%; border: none; background: #fff; }
+.preview-text {
+  padding: 12px; font-family: Consolas, Menlo, monospace; font-size: 13px;
+  white-space: pre-wrap; word-break: break-word;
+}
+.preview-audio { display: flex; align-items: center; justify-content: center; height: 100%; }
+
 /* ---------- App: Desktop remoto / Info ---------- */
 .remote-frame { width: 100%; height: 100%; border: none; background: black; }
 .remote-setup { padding: 20px; line-height: 1.6; }

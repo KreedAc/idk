@@ -5,9 +5,12 @@
  */
 const express = require('express');
 const multer = require('multer');
+const { WebSocketServer } = require('ws');
+const { spawn } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const fsp = require('fs/promises');
+const http = require('http');
 const os = require('os');
 const path = require('path');
 
@@ -25,7 +28,9 @@ if (fs.existsSync(CONFIG_PATH)) {
     password: crypto.randomBytes(9).toString('base64url'),
     storageDir: path.join(__dirname, 'storage'),
     // URL del client noVNC per il desktop remoto, es. "http://localhost:6080/vnc.html"
-    remoteDesktopUrl: ''
+    remoteDesktopUrl: '',
+    // Programmi avviabili dalla UI, es. { "name": "Blocco note", "command": "notepad.exe" }
+    launcherApps: []
   };
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
   console.log('==============================================');
@@ -50,13 +55,18 @@ function createSession() {
   return token;
 }
 
-function validSession(req) {
+function sessionToken(req) {
   const cookie = req.headers.cookie || '';
   const match = cookie.match(/(?:^|;\s*)hc_session=([a-f0-9]{64})/);
-  if (!match) return false;
-  const expiry = sessions.get(match[1]);
+  return match ? match[1] : null;
+}
+
+function validSession(req) {
+  const token = sessionToken(req);
+  if (!token) return false;
+  const expiry = sessions.get(token);
   if (!expiry || expiry < Date.now()) {
-    sessions.delete(match[1]);
+    sessions.delete(token);
     return false;
   }
   return true;
@@ -140,8 +150,8 @@ app.use('/api', (req, res, next) => {
 });
 
 app.post('/api/logout', (req, res) => {
-  const match = (req.headers.cookie || '').match(/hc_session=([a-f0-9]{64})/);
-  if (match) sessions.delete(match[1]);
+  const token = sessionToken(req);
+  if (token) sessions.delete(token);
   res.setHeader('Set-Cookie', 'hc_session=; Path=/; Max-Age=0');
   res.json({ ok: true });
 });
@@ -184,7 +194,9 @@ app.get('/api/download', (req, res, next) => {
     if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
       return res.status(404).json({ error: 'File non trovato' });
     }
-    res.download(file);
+    // inline=1: il file viene mostrato nel browser (anteprime) invece di scaricato
+    if (req.query.inline === '1') res.sendFile(file);
+    else res.download(file);
   } catch (e) {
     next(e);
   }
@@ -228,6 +240,30 @@ app.post('/api/delete', async (req, res, next) => {
   }
 });
 
+// --- Launcher di programmi ---------------------------------------------------
+// I programmi avviabili sono SOLO quelli dichiarati in config.json
+app.get('/api/apps', (req, res) => {
+  const apps = (config.launcherApps || []).map((a, i) => ({ id: i, name: a.name }));
+  res.json({ apps });
+});
+
+app.post('/api/apps/run', (req, res) => {
+  const entry = (config.launcherApps || [])[Number(req.body.id)];
+  if (!entry) return res.status(404).json({ error: 'Programma non trovato' });
+  try {
+    const child = spawn(entry.command, {
+      shell: true,
+      detached: true,
+      stdio: 'ignore',
+      cwd: os.homedir()
+    });
+    child.unref();
+    res.json({ ok: true, name: entry.name });
+  } catch (e) {
+    res.status(500).json({ error: `Avvio fallito: ${e.message}` });
+  }
+});
+
 // --- Statistiche di sistema -------------------------------------------------
 // L'uso CPU è calcolato come delta tra due letture di os.cpus()
 let prevCpu = os.cpus().map((c) => ({ ...c.times }));
@@ -268,7 +304,58 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || 'Errore interno' });
 });
 
-app.listen(config.port, () => {
+// --- Terminale via WebSocket -------------------------------------------------
+// Ogni connessione apre una shell reale sul PC (bash/PowerShell), protetta
+// dalla stessa sessione di login delle API.
+const server = http.createServer(app);
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (req, socket, head) => {
+  if (req.url !== '/api/term' || !validSession(req)) {
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+  wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
+});
+
+wss.on('connection', (ws) => {
+  const isWin = process.platform === 'win32';
+  const shell = spawn(isWin ? 'powershell.exe' : process.env.SHELL || 'bash', isWin ? ['-NoLogo'] : [], {
+    cwd: os.homedir(),
+    env: { ...process.env, TERM: 'dumb' }
+  });
+
+  const send = (type, data) => {
+    if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type, data }));
+  };
+  send('info', `Shell: ${isWin ? 'PowerShell' : shell.spawnfile} · cartella: ${os.homedir()}`);
+
+  shell.stdout.on('data', (d) => send('output', d.toString()));
+  shell.stderr.on('data', (d) => send('output', d.toString()));
+  shell.on('exit', (code) => {
+    send('exit', code);
+    ws.close();
+  });
+  shell.on('error', (e) => {
+    send('output', `Errore shell: ${e.message}\n`);
+    ws.close();
+  });
+
+  ws.on('message', (msg) => {
+    try {
+      const { type, data } = JSON.parse(msg);
+      if (type === 'input') shell.stdin.write(data);
+    } catch {}
+  });
+  ws.on('close', () => {
+    try {
+      shell.kill();
+    } catch {}
+  });
+});
+
+server.listen(config.port, () => {
   console.log(`HomeCloud in ascolto su http://localhost:${config.port}`);
   console.log(`Storage: ${STORAGE_ROOT}`);
 });

@@ -12,8 +12,14 @@ telefono, tablet) con un'interfaccia in stile desktop Windows.
 
 - **📁 File** — file manager nel browser: carica (anche col drag & drop),
   scarica, rinomina, elimina, crea cartelle. I file vivono sul disco del PC di
-  casa, nella cartella `storage/`.
+  casa, nella cartella `storage/`. **Doppio clic per l'anteprima** di foto,
+  video, musica, PDF e file di testo, direttamente in una finestra.
 - **📊 Monitor di sistema** — CPU, RAM, disco e uptime del PC in tempo reale.
+- **⌨️ Terminale** — una shell **vera** sul PC di casa (PowerShell su Windows,
+  bash su Linux/Mac) dentro il browser: esegui comandi, avvia script, spegni o
+  riavvia il PC da remoto.
+- **🚀 Avvia programmi** — pulsanti per lanciare sul PC i programmi che
+  configuri tu (es. Blocco note, un gioco, un backup).
 - **🖥️ Desktop remoto** — lo schermo del PC in una finestra del browser
   (tramite VNC + noVNC, configurazione opzionale, vedi sotto).
 - **🔐 Accesso protetto** — login con password, sessioni con cookie, blocco dei
@@ -46,12 +52,17 @@ casualmente, stampata in console**: segnatela (o cambiala nel file). Poi apri
   "port": 8080,
   "password": "la-tua-password",
   "storageDir": "./storage",
-  "remoteDesktopUrl": ""
+  "remoteDesktopUrl": "",
+  "launcherApps": [
+    { "name": "Blocco note", "command": "notepad.exe" },
+    { "name": "Riavvia PC", "command": "shutdown /r /t 60" }
+  ]
 }
 ```
 
 - `storageDir` può puntare a qualsiasi disco/cartella (es. un hard disk grande
   dedicato allo storage).
+- `launcherApps` è l'elenco dei programmi avviabili dall'app "🚀 Avvia".
 - Dopo ogni modifica riavvia il server (`Ctrl+C` e di nuovo `npm start`).
 
 ## Accesso da fuori casa (consigliato: Tailscale)
@@ -130,9 +141,11 @@ e mettilo nella cartella Esecuzione automatica (`Win+R` → `shell:startup`).
 
 ## Roadmap (verso la visione completa)
 
+- [x] Anteprime di immagini, video, audio, PDF e testo nel file manager
+- [x] Terminale remoto nel browser
+- [x] Launcher di programmi configurabile
 - [ ] Cartella sincronizzata automaticamente tra dispositivi (stile Dropbox)
 - [ ] Condivisione file con link temporanei
-- [ ] Anteprime di immagini e video nel file manager
 - [ ] Più utenti con spazi separati
 - [ ] HTTPS integrato
 - [ ] Integrazione "cloud phone" (Android in una finestra)
@@ -143,4 +156,6 @@ e mettilo nella cartella Esecuzione automatica (`Win+R` → `shell:startup`).
 - La password in `config.json` è in chiaro: proteggi quel file.
 - Senza HTTPS il traffico non è cifrato: usa sempre Tailscale (che cifra
   tutto) per l'accesso da fuori casa.
+- Il terminale e il launcher eseguono comandi **veri** sul PC: chiunque abbia
+  la password ha il controllo completo della macchina. Usa una password lunga.
 - Questo è un prototipo per uso personale, non esporlo direttamente a internet.
