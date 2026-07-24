@@ -1,0 +1,197 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --taskbar-h: 44px;
+  --accent: #2f7cf6;
+  --win-bg: #1f2530;
+  --win-border: #3a4356;
+  --text: #e8ecf3;
+  --text-dim: #9aa5b8;
+}
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background: #0b0e14;
+  user-select: none;
+}
+
+.hidden { display: none !important; }
+
+/* ---------- Login ---------- */
+#login-screen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 30% 20%, #1b2a4a 0%, #0b0e14 70%);
+}
+.login-box {
+  text-align: center;
+  padding: 40px 48px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+.login-logo { font-size: 56px; }
+.login-box h1 { font-weight: 600; margin: 8px 0 2px; }
+.login-sub { color: var(--text-dim); margin-bottom: 24px; }
+.login-box input {
+  display: block; width: 260px; padding: 10px 14px; margin-bottom: 12px;
+  border-radius: 8px; border: 1px solid var(--win-border);
+  background: #131824; color: var(--text); font-size: 15px; outline: none;
+}
+.login-box input:focus { border-color: var(--accent); }
+.login-box button {
+  width: 100%; padding: 10px; border: none; border-radius: 8px;
+  background: var(--accent); color: white; font-size: 15px; cursor: pointer;
+}
+.login-box button:hover { filter: brightness(1.1); }
+.login-error { color: #ff7676; margin-top: 10px; min-height: 1.2em; font-size: 13px; }
+
+/* ---------- Desktop ---------- */
+#desktop {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #16223d 0%, #0e1526 50%, #1a1030 100%);
+}
+
+#desktop-icons {
+  position: absolute; top: 16px; left: 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.desktop-icon {
+  width: 92px; padding: 10px 4px;
+  background: transparent; border: 1px solid transparent; border-radius: 8px;
+  color: var(--text); cursor: pointer; text-align: center;
+}
+.desktop-icon:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); }
+.desktop-icon .icon { display: block; font-size: 34px; }
+.desktop-icon .label { display: block; margin-top: 6px; font-size: 12px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+
+/* ---------- Finestre ---------- */
+.window {
+  position: absolute;
+  min-width: 320px; min-height: 220px;
+  background: var(--win-bg);
+  border: 1px solid var(--win-border);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+  display: flex; flex-direction: column;
+  resize: both; overflow: hidden;
+}
+.window.maximized {
+  top: 0 !important; left: 0 !important;
+  width: 100% !important; height: calc(100% - var(--taskbar-h)) !important;
+  border-radius: 0; resize: none;
+}
+.window.focused { border-color: var(--accent); }
+
+.window-titlebar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  background: #171c26;
+  cursor: move; flex-shrink: 0;
+}
+.window-titlebar .title { flex: 1; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; }
+.window-titlebar button {
+  width: 26px; height: 26px; border: none; border-radius: 6px;
+  background: transparent; color: var(--text-dim); cursor: pointer; font-size: 13px;
+}
+.window-titlebar button:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.window-titlebar .btn-close:hover { background: #d33; color: white; }
+
+.window-body { flex: 1; overflow: auto; padding: 12px; user-select: text; }
+.window-body.no-pad { padding: 0; }
+
+/* ---------- Taskbar ---------- */
+#taskbar {
+  position: fixed; left: 0; right: 0; bottom: 0; height: var(--taskbar-h);
+  display: flex; align-items: center; gap: 8px; padding: 0 10px;
+  background: rgba(13,17,26,0.92);
+  border-top: 1px solid var(--win-border);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+}
+#start-button {
+  padding: 7px 14px; border: none; border-radius: 8px;
+  background: var(--accent); color: white; font-size: 14px; cursor: pointer;
+}
+#taskbar-windows { flex: 1; display: flex; gap: 6px; overflow-x: auto; }
+.taskbar-win {
+  padding: 6px 12px; border: 1px solid var(--win-border); border-radius: 7px;
+  background: transparent; color: var(--text); font-size: 12px; cursor: pointer;
+  white-space: nowrap;
+}
+.taskbar-win.active { background: rgba(47,124,246,0.25); border-color: var(--accent); }
+#taskbar-clock { font-size: 13px; color: var(--text-dim); padding: 0 6px; }
+
+/* ---------- Menu Start ---------- */
+#start-menu {
+  position: fixed; left: 10px; bottom: calc(var(--taskbar-h) + 8px);
+  width: 260px; padding: 8px;
+  background: var(--win-bg); border: 1px solid var(--win-border); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+  z-index: 10001;
+}
+.start-header { padding: 10px 12px; font-weight: 600; border-bottom: 1px solid var(--win-border); margin-bottom: 6px; }
+.start-header span { color: var(--text-dim); font-weight: 400; font-size: 12px; }
+#start-menu hr { border: none; border-top: 1px solid var(--win-border); margin: 6px 0; }
+.start-item {
+  display: block; width: 100%; text-align: left;
+  padding: 9px 12px; border: none; border-radius: 8px;
+  background: transparent; color: var(--text); font-size: 14px; cursor: pointer;
+}
+.start-item:hover { background: rgba(255,255,255,0.08); }
+
+/* ---------- App: File ---------- */
+.files-toolbar {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding-bottom: 10px; border-bottom: 1px solid var(--win-border); margin-bottom: 8px;
+}
+.files-toolbar button {
+  padding: 6px 10px; border: 1px solid var(--win-border); border-radius: 7px;
+  background: #262d3b; color: var(--text); font-size: 12px; cursor: pointer;
+}
+.files-toolbar button:hover { border-color: var(--accent); }
+.breadcrumb { flex: 1; font-size: 13px; color: var(--text-dim); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.breadcrumb a { color: var(--accent); cursor: pointer; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+
+.file-list { width: 100%; border-collapse: collapse; font-size: 13px; }
+.file-list td { padding: 7px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.file-row { cursor: pointer; }
+.file-row:hover { background: rgba(255,255,255,0.05); }
+.file-name { display: flex; align-items: center; gap: 8px; }
+.file-meta { color: var(--text-dim); white-space: nowrap; }
+.file-actions { text-align: right; white-space: nowrap; }
+.file-actions button {
+  border: none; background: transparent; color: var(--text-dim);
+  cursor: pointer; font-size: 13px; padding: 2px 5px; border-radius: 5px;
+}
+.file-actions button:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+.files-empty { padding: 30px; text-align: center; color: var(--text-dim); }
+.files-dropzone.dragover { outline: 2px dashed var(--accent); outline-offset: -6px; }
+
+/* ---------- App: Monitor ---------- */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-card {
+  padding: 12px; border: 1px solid var(--win-border); border-radius: 10px; background: #171c26;
+}
+.stat-card.wide { grid-column: span 2; }
+.stat-title { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+.stat-value { font-size: 20px; font-weight: 600; }
+.stat-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+.bar { height: 8px; border-radius: 4px; background: #0d1119; margin-top: 8px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.5s; }
+.bar-fill.warn { background: #e6a23c; }
+.bar-fill.crit { background: #d94141; }
+
+/* ---------- App: Desktop remoto / Info ---------- */
+.remote-frame { width: 100%; height: 100%; border: none; background: black; }
+.remote-setup { padding: 20px; line-height: 1.6; }
+.remote-setup code { background: #0d1119; padding: 2px 6px; border-radius: 5px; font-size: 12px; }
+.remote-setup ol { margin: 10px 0 10px 22px; }
+.info-body { line-height: 1.7; }
+.info-body h2 { margin-bottom: 8px; }
+.info-body ul { margin: 8px 0 8px 22px; }

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HomeCloud</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Schermata di login -->
+  <div id="login-screen" class="hidden">
+    <div class="login-box">
+      <div class="login-logo">☁️</div>
+      <h1>HomeCloud</h1>
+      <p class="login-sub">Il tuo PC, ovunque tu sia</p>
+      <form id="login-form">
+        <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" autofocus>
+        <button type="submit">Accedi</button>
+        <p id="login-error" class="login-error"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Desktop -->
+  <div id="desktop" class="hidden">
+    <div id="desktop-icons">
+      <button class="desktop-icon" data-app="files">
+        <span class="icon">📁</span><span class="label">File</span>
+      </button>
+      <button class="desktop-icon" data-app="monitor">
+        <span class="icon">📊</span><span class="label">Monitor</span>
+      </button>
+      <button class="desktop-icon" data-app="remote">
+        <span class="icon">🖥️</span><span class="label">Desktop remoto</span>
+      </button>
+      <button class="desktop-icon" data-app="info">
+        <span class="icon">ℹ️</span><span class="label">Info</span>
+      </button>
+    </div>
+
+    <div id="windows-layer"></div>
+
+    <!-- Menu Start -->
+    <div id="start-menu" class="hidden">
+      <div class="start-header">☁️ HomeCloud <span id="start-hostname"></span></div>
+      <button class="start-item" data-app="files">📁 File</button>
+      <button class="start-item" data-app="monitor">📊 Monitor di sistema</button>
+      <button class="start-item" data-app="remote">🖥️ Desktop remoto</button>
+      <button class="start-item" data-app="info">ℹ️ Informazioni</button>
+      <hr>
+      <button class="start-item" id="btn-logout">🔒 Esci</button>
+    </div>
+
+    <!-- Barra delle applicazioni -->
+    <div id="taskbar">
+      <button id="start-button">☁️ Start</button>
+      <div id="taskbar-windows"></div>
+      <div id="taskbar-clock"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
